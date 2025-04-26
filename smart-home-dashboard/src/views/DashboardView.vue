@@ -1,8 +1,9 @@
 <script setup>
 import { onMounted, computed, ref, watch } from 'vue'
 import { useDeviceStore } from '@/stores/deviceStore'
-import DeviceWidget from '@/components/DeviceWidget.vue'
+import GenericDeviceWidget from '@/components/devices/GenericDeviceWidget.vue'
 import DashboardNavbar from '@/components/DashboardNavbar.vue'
+import { deviceWidgetMap } from '@/utils/deviceWidgetMap'
 
 const selectedRoomId = ref(null)
 const deviceStore = useDeviceStore();
@@ -38,9 +39,10 @@ watch(selectedRoomId, () => {
   
       <!-- Device Widgets -->
       <div class="device-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-        <DeviceWidget
+        <component
           v-for="device in devicesInSelectedRoom"
           :key="device.id"
+          :is="(deviceWidgetMap[device.type.toLowerCase()] || GenericDeviceWidget)"
           :device="device"
         />
       </div>

@@ -1,0 +1,88 @@
+{
+    "light" :
+    {
+      "id": "1a5fas3",
+      "type": "light",
+      "name": "Big Light",
+      "roomId": 0,
+
+      "state": "off"
+    },
+    "rgb-light": 
+    {
+      "id": "1a5fds3",
+      "type": "rgb-light",
+      "name": "Big Light",
+      "roomId": 0,
+      
+      "state": "off",
+      "color": "#ffcc00",
+      "dimLevel": 3
+    },
+    "thermometer": 
+    {
+      "id": "2b4trg9",
+      "type": "thermometer",
+      "name": "Bedroom Thermometer",
+      "roomId": 1,
+      
+      "state": "off",
+      "temperature": 22
+    },
+    "thermostat": 
+    {
+      "id": "2b8trg9",
+      "type": "thermostat",
+      "name": "Living Room Thermostat",
+      "roomId": 1,
+      
+      "state": "off",
+      "temperature": 22,
+      "targetTemperature": 24,
+      "mode": "heat"
+    },
+    "door_lock": 
+    {
+      "id": "3l0plk2",
+      "type": "door_lock",
+      "name": "Front Door",
+      "roomId": 2,
+      
+      "state": "off",
+      "locked": true,
+      "batteryLevel": 80
+    },
+    "camera": 
+    {
+      "id": "4xcmeo1",
+      "type": "camera",
+      "name": "Garage Camera",
+      "roomId": 3,
+      
+      "state": "off",
+      "streamUrl": "http://camera.local/stream",
+      "recording": true
+    },
+    "motion_sensor": 
+    {
+      "id": "5xzpoa7",
+      "type": "motion_sensor",
+      "name": "Hallway Sensor",
+      "roomId": 4,
+      
+      "state": "off",
+      "motionDetected": false,
+      "sensitivity": "medium"
+    },
+    "smart_plug": 
+    {
+      "id": "6auzrt4",
+      "type": "smart_plug",
+      "name": "Coffee Machine Plug",
+      "roomId": 1,
+      
+      "state": "on",
+      "powerUsageWatts": 1300
+    }
+  }
+  

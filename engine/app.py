@@ -19,12 +19,12 @@ def get_rooms():
 @app.route('/api/devices', methods=['GET'])
 def get_devices():
     devices = [
-        {"id": 1, "name" : "Light", "roomId" : 1},
-        {"id": 2, "name" : "Thermometer", "roomId" : 1},
-        {"id": 3, "name" : "Alarm", "roomId" : 1},
-        {"id": 4, "name" : "Light", "roomId" : 2},
-        {"id": 5, "name" : "Light", "roomId" : 3},
-        {"id": 6, "name" : "Light", "roomId" : 4}
+        {"id": 1, "type" : "Light", "roomId" : 1},
+        {"id": 2, "type" : "Thermometer", "roomId" : 1},
+        {"id": 3, "type" : "Alarm", "roomId" : 1},
+        {"id": 4, "type" : "Light", "roomId" : 2},
+        {"id": 5, "type" : "Light", "roomId" : 3},
+        {"id": 6, "type" : "Light", "roomId" : 4}
     ]
     return jsonify(devices), 200
 
