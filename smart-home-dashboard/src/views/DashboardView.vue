@@ -33,7 +33,7 @@ watch(selectedRoomId, () => {
 </script>
 
 <template>
-    <div class="dashboard-view">
+    <div class="max-w-7xl mx-auto p-4 sm:p-6 md:p-8">
       <!-- Dynamic Navbar -->
       <DashboardNavbar :selectedRoom="selectedRoomId" @room-selected="handleRoomSelected($event)"/>
   

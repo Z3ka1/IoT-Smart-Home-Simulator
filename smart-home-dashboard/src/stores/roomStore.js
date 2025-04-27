@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import axios from 'axios'
 
 export const useRoomStore = defineStore('room', () => {
@@ -19,7 +19,10 @@ export const useRoomStore = defineStore('room', () => {
 
 
   }
-
+  
+  onMounted(() => {
+      fetchRooms();  
+  }); 
 
   return {
     rooms,
