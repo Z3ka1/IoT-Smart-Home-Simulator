@@ -16,17 +16,27 @@ export const useRoomStore = defineStore('room', () => {
     } finally {
         isLoading.value = false
     }
-
-
   }
   
   onMounted(() => {
       fetchRooms();  
-  }); 
+  });
+  
+  const addRoom = async (roomData) => {
+    const response = await axios.post('http://localhost:8000/api/rooms/add', roomData)
+    rooms.value.push(response.data)
+  }
+
+  const removeRoom = async (roomId) => {
+    const response = await axios.delete(`http://localhost:8000/api/rooms/remove/${roomId}`)
+    rooms.value = rooms.value.filter(room => room.id !== roomId)
+  }
 
   return {
     rooms,
     isLoading,
-    fetchRooms
+    fetchRooms,
+    addRoom,
+    removeRoom
   }
 })
