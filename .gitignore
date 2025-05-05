@@ -1,1 +1,4 @@
 .DS_Store
+engine/venv/
+__pycache__/
+logfile
