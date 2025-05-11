@@ -19,7 +19,7 @@ const handleLogin = async () => {
     })
 
     if (response.status === 200) {
-      auth.login(name.value)
+      auth.login(name.value, response.data.id)
       router.push('/')
     }
   } catch (err) {

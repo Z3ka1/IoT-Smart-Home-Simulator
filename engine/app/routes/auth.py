@@ -13,8 +13,11 @@ def login():
 
     gateway = Gateway.query.filter_by(name=name).first()
 
+    if not gateway:
+        return jsonify({"message": "Invalid credentials", "authenticated": False}), 401
+
     if check_password_hash(gateway.password_hash, password):  # Use hashing in production
-        return jsonify({"message": "Login successful", "authenticated": True}), 200
+        return jsonify({"message": "Login successful", "authenticated": True, "id": gateway.id}), 200
 
     return jsonify({"message": "Invalid credentials", "authenticated": False}), 401
 

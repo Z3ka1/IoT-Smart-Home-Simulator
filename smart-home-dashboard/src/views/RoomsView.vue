@@ -1,9 +1,12 @@
 <script setup>
 import { onMounted, computed, ref } from 'vue'
 import { useRoomStore } from '@/stores/roomStore'
+import { useAuthStore } from '@/stores/auth'
 import PopupWindow from '@/components/PopupWindow.vue'
+import axios from 'axios'
 
 const roomStore = useRoomStore()
+const authStore = useAuthStore()
 let popupIsActive = ref(false)
 
 console.log(roomStore.rooms)
@@ -14,13 +17,33 @@ const addNewRoom = async () => {
     if (!newRoomName.value.trim()) return
 
     try {
-        await roomStore.addRoom( {name: newRoomName.value} )
+      const response = await axios.post('http://localhost:8000/api/rooms', {
+      name: newRoomName.value,
+      gatewayId: authStore.gatewayId
+      })
+      if (response.status === 201) {
+        roomStore.addRoom( {id: response.data.id, gateway_id: response.data.gateway_id, name: newRoomName.value} )
         newRoomName.value = ''
         popupIsActive.value = false
+      }
     } catch (error) {
         console.error('Error adding room:', error);
         alert('Error adding room')
     }
+}
+
+const removeRoom = async (roomId) => {
+  console.log(roomId)
+  try {
+    const response = await axios.delete(`http://localhost:8000/api/rooms/remove/${roomId}`)
+    if (response.status === 200) {
+      roomStore.removeRoom(roomId)
+    }
+  }
+  catch (error) {
+    console.error('Error removing room: ', error);
+    alert('Error removing room')
+  }
 }
 
 
@@ -33,7 +56,7 @@ const addNewRoom = async () => {
         <li v-for="room in roomStore.rooms" :key="room.id" class="bg-white rounded shadow-md p-4 relative">
           <button
             class="absolute top-2 right-2 text-red-500 hover:text-red-700 text-lg"
-            @click="roomStore.removeRoom(room.id)"
+            @click="removeRoom(room.id)"
           >
             &#215;
           </button>

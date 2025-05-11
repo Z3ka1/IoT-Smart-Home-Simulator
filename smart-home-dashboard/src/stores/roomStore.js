@@ -9,7 +9,12 @@ export const useRoomStore = defineStore('room', () => {
   const fetchRooms = async () => {
     try {
         isLoading.value = true
-        const res = await axios.get('http://localhost:8000/api/rooms')
+        const gatewayId = localStorage.getItem('gatewayId')
+
+        const res = await axios.get('http://localhost:8000/api/rooms', {
+          headers: {'X-Gateway-ID': gatewayId}
+        })
+
         rooms.value = res.data
     } catch (error) {
         console.error('Failed to fetch rooms: ', error)
@@ -21,14 +26,16 @@ export const useRoomStore = defineStore('room', () => {
   onMounted(() => {
       fetchRooms();  
   });
+
+  const resetRooms = () => {
+    rooms.value = []
+  }
   
   const addRoom = async (roomData) => {
-    const response = await axios.post('http://localhost:8000/api/rooms/add', roomData)
-    rooms.value.push(response.data)
+    rooms.value.push(roomData)
   }
 
   const removeRoom = async (roomId) => {
-    const response = await axios.delete(`http://localhost:8000/api/rooms/remove/${roomId}`)
     rooms.value = rooms.value.filter(room => room.id !== roomId)
   }
 
@@ -37,6 +44,7 @@ export const useRoomStore = defineStore('room', () => {
     isLoading,
     fetchRooms,
     addRoom,
-    removeRoom
+    removeRoom,
+    resetRooms
   }
 })

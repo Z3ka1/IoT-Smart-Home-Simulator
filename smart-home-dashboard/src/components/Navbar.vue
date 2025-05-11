@@ -2,13 +2,16 @@
 import {ref} from 'vue';
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router';
+import { useRoomStore } from '@/stores/roomStore';
 
 const isOpen = ref(false);
 const auth = useAuthStore();
 const router = useRouter();
+const roomStore = useRoomStore();
 
 const handleLogout = () => {
   auth.logout();
+  roomStore.resetRooms();
   router.push('/login');
 }
 </script>
