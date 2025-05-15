@@ -9,7 +9,11 @@ export const useDeviceStore = defineStore('device', () => {
   const fetchDevices = async () => {
     try {
         isLoading.value = true
-        const res = await axios.get('http://localhost:8000/api/devices')
+        const gatewayId = localStorage.getItem('gatewayId')
+
+        const res = await axios.get('http://localhost:8000/api/devices', {
+          headers: {'X-Gateway-ID': gatewayId}
+        })
         devices.value = res.data
         console.log('Devices fetched:', devices.value)
     } catch (error) {

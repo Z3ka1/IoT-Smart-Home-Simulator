@@ -7,7 +7,11 @@ import { deviceWidgetMap } from '@/utils/deviceWidgetMap'
 
 const selectedRoomId = ref(null)
 const deviceStore = useDeviceStore();
+const { fetchDevices } = useDeviceStore();
 
+onMounted(() => {
+  fetchDevices();
+});
 
 const handleRoomSelected = (roomId) => {
   selectedRoomId.value = roomId;
