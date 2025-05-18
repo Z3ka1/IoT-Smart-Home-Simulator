@@ -1,0 +1,6 @@
+# JSON data for a simpleLed device
+{
+    "properties": { 
+        "state" : "on"  # "on" or "off"
+    }
+}

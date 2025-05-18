@@ -4,6 +4,7 @@ from app.models.gateway import Gateway
 from app import db
 from threading import Event
 import time
+import sys
 
 devices_bp = Blueprint('devices', __name__)
 
@@ -98,4 +99,42 @@ def pair_device():
     pending_pairing["event"].set()
     pending_pairing = None
 
-    return jsonify({"message": "Device successfully registered"}), 201
+    return jsonify({"message": "Device successfully registered", "device_id": new_device.id}), 201
+
+
+
+#Device: simpleLED
+@devices_bp.route('/devices/simpleled/<int:device_id>/state', methods=['PUT'])
+def update_device_state(device_id):
+    gateway_id = request.headers.get('X-Gateway-ID')
+    if not gateway_id:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    device = Device.query.filter_by(id = device_id, gateway_id=gateway_id).first()
+    if not device:
+        return jsonify({'error': 'Device not found'}), 404
+    
+    data = request.get_json()
+    if 'state' not in data:
+        return jsonify({'error': 'Missing "state" field in request'}), 400
+    
+    if data['state'] == True:
+        state = "on"
+    else:
+        state = "off"
+    properties = device.properties or {}
+    properties['state'] = state
+
+    device.properties = properties
+    db.session.commit()
+
+    #print(f"props: {properties}", file = sys.stdout)
+    #print(f"props: {device.properties}", file = sys.stdout)
+    return jsonify({'message': 'Device state updated successfully', 'properties': properties}), 200
+
+@devices_bp.route('/devices/simpleled/<int:device_id>/state', methods=['GET'])
+def get_device_state(device_id):
+    device = Device.query.filter_by(id = device_id).first()
+    if not device:
+        return jsonify({'error': 'Device not found'}), 404
+    return jsonify({'properties': device.properties or {}}), 200
