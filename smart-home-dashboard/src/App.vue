@@ -1,5 +1,8 @@
 <script setup>
   import Navbar from './components/Navbar.vue';
+  import socket from './services/websocket';
+
+  socket.connect()
 
 </script>
 

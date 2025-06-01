@@ -3,6 +3,7 @@ from app.models.device import Device
 from app.models.gateway import Gateway
 from app import db
 from threading import Event
+from datetime import datetime
 import time
 import sys
 
@@ -26,6 +27,7 @@ def get_devices():
             "type": d.type,
             "description": d.description,
             "roomId": d.room_id,
+            "available": d.available,
             "properties": d.properties
         } for d in devices
     ])
@@ -137,4 +139,6 @@ def get_device_state(device_id):
     device = Device.query.filter_by(id = device_id).first()
     if not device:
         return jsonify({'error': 'Device not found'}), 404
+    device.last_seen = datetime.utcnow()
+    db.session.commit()
     return jsonify({'properties': device.properties or {}}), 200

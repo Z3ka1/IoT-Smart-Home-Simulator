@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, onMounted, watchEffect } from 'vue'
+import { ref, watch, onMounted, watchEffect, onUnmounted } from 'vue'
 import axios from 'axios'
 import debounce from 'lodash/debounce'
 
@@ -7,9 +7,11 @@ const props = defineProps({ device: Object })
 
 const isOn = ref(false)
 const ignoreNextUpdate = ref(false)
+const isAvailable = ref(true)
 
 onMounted(() => {
     isOn.value = props.device.properties?.state === 'on'
+    isAvailable.value = props.device.available
 })
 
 // Watch for prop changes (e.g., polling)
@@ -43,13 +45,18 @@ watch(isOn, async(newValue, oldValue) => {
         updateDeviceState(newValue)
     }
 })
+
+watch(() => props.device.available, (newVal) => {
+  isAvailable.value = newVal
+})
 </script>
 
 <template>
-  <div class="relative rounded-2xl shadow-md p-4 bg-white w-64 h-32">
+  <div class="relative rounded-2xl shadow-md p-4 bg-white w-64 h-32"
+      :class = "{'opacity-50 grayscale pointer-events-none': !isAvailable}">
     <!-- On/Off Toggle -->
     <label class="absolute top-3 right-3 inline-flex items-center cursor-pointer">
-      <input type="checkbox" v-model="isOn" class="sr-only peer">
+      <input type="checkbox" v-model="isOn" :disabled="!isAvailable" class="sr-only peer">
       <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:bg-green-500 transition-colors duration-300"></div>
       <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transform transition-transform duration-300"
            :class="{ 'translate-x-full': isOn }"></div>
@@ -60,6 +67,7 @@ watch(isOn, async(newValue, oldValue) => {
 
     <!-- Status Text -->
     <p class="text-sm text-gray-500">Status: <span :class="isOn ? 'text-green-600' : 'text-red-500'">{{ isOn ? 'On' : 'Off' }}</span></p>
+    
   </div>
 </template>
 

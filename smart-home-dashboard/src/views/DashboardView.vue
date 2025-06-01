@@ -1,16 +1,42 @@
 <script setup>
-import { onMounted, computed, ref, watch } from 'vue'
+import { onMounted, computed, ref, watch, onUnmounted } from 'vue'
 import { useDeviceStore } from '@/stores/deviceStore'
 import GenericDeviceWidget from '@/components/devices/GenericDeviceWidget.vue'
 import DashboardNavbar from '@/components/DashboardNavbar.vue'
 import { deviceWidgetMap } from '@/utils/deviceWidgetMap'
+import socket from '@/services/websocket'
 
 const selectedRoomId = ref(null)
 const deviceStore = useDeviceStore();
 const { fetchDevices } = useDeviceStore();
 
+const socketHandlers = {
+  device_status: null,
+  test_pong: null
+}
+
+const handleSocketUpdate = (data) => {
+  console.log('[INFO] Received device_status:', data)
+  const device = deviceStore.devices.find(d => d.id === data.id)
+  if (device) device.available = data.available
+}
+
 onMounted(() => {
   fetchDevices();
+  
+  socketHandlers.device_status = handleSocketUpdate
+
+  socket.on('device_status', socketHandlers.device_status)
+
+  socket.on('connect_error', (err) => {
+    console.error("[ERROR] Connection error:", err)
+  })
+});
+
+onUnmounted(() => {
+  if (socketHandlers.device_status) socket.off('device_status', socketHandlers.device_status)
+
+  console.log('[INFO] Cleaned up all socket listeners')
 });
 
 const handleRoomSelected = (roomId) => {
@@ -22,14 +48,14 @@ const devicesInSelectedRoom = computed(() => {
 });
 
 watch(selectedRoomId, (newValue, oldValue) => {
-  console.log('selected room ID:', newValue);
+  console.log('[INFO] selected room ID:', newValue);
 })
 
 watch(selectedRoomId, () => {
   if (deviceStore.devices.length > 0) {
-    console.log('Devices In selected room: ',devicesInSelectedRoom.value);
+    console.log('[INFO] Devices In selected room: ',devicesInSelectedRoom.value);
   } else {
-    console.log('Devices not yet fetched');
+    console.log('[INFO] Devices not yet fetched');
   }
 });
 
