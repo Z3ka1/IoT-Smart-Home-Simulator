@@ -52,28 +52,68 @@ watch(() => props.device.available, (newVal) => {
 </script>
 
 <template>
-  <div class="relative rounded-2xl shadow-md p-4 bg-white w-64 h-32"
+  <div class="bg-card border border-border rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200 group"
       :class = "{'opacity-50 grayscale pointer-events-none': !isAvailable}">
-    <!-- On/Off Toggle -->
-    <label class="absolute top-3 right-3 inline-flex items-center cursor-pointer">
-      <input type="checkbox" v-model="isOn" :disabled="!isAvailable" class="sr-only peer">
-      <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:bg-green-500 transition-colors duration-300"></div>
-      <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transform transition-transform duration-300"
-           :class="{ 'translate-x-full': isOn }"></div>
-    </label>
-
-    <!-- Device Type -->
-    <h3 class="text-lg font-semibold text-gray-800 mb-2">{{ device.name || 'LED Light' }}</h3>
-
-    <!-- Status Text -->
-    <p class="text-sm text-gray-500">Status: <span :class="isOn ? 'text-green-600' : 'text-red-500'">{{ isOn ? 'On' : 'Off' }}</span></p>
     
+    <!-- Header with device info and toggle -->
+    <div class="flex items-start justify-between mb-6">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-secondary rounded-lg flex items-center justify-center">
+          <svg class="w-5 h-5 text-secondary-foreground" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.477.859h4z"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="font-semibold text-foreground">{{ device.name || 'LED Light' }}</h3>
+          <p class="text-sm text-muted-foreground">Smart LED</p>
+        </div>
+      </div>
+      
+      <!-- Toggle switch -->
+      <label class="relative inline-flex items-center cursor-pointer">
+        <input type="checkbox" v-model="isOn" :disabled="!isAvailable" class="sr-only peer">
+        <div class="w-11 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:bg-primary transition-colors duration-300 relative">
+          <div class="absolute left-1 top-1 w-4 h-4 bg-background rounded-full shadow-sm transform transition-transform duration-300 peer-checked:translate-x-5"></div>
+        </div>
+      </label>
+    </div>
+
+    <!-- Status section -->
+    <div class="space-y-3">
+      <div class="flex items-center justify-between">
+        <span class="text-sm text-muted-foreground">Status</span>
+        <div class="flex items-center gap-2">
+          <div :class="[
+            'w-2 h-2 rounded-full',
+            isOn ? 'bg-success' : 'bg-muted-foreground'
+          ]"></div>
+          <span :class="[
+            'text-sm font-medium',
+            isOn ? 'text-success' : 'text-muted-foreground'
+          ]">{{ isOn ? 'On' : 'Off' }}</span>
+        </div>
+      </div>
+      
+      <div class="flex items-center justify-between">
+        <span class="text-sm text-muted-foreground">Connection</span>
+        <div class="flex items-center gap-2">
+          <div :class="[
+            'w-2 h-2 rounded-full',
+            isAvailable ? 'bg-success' : 'bg-destructive'
+          ]"></div>
+          <span :class="[
+            'text-sm font-medium',
+            isAvailable ? 'text-success' : 'text-destructive'
+          ]">{{ isAvailable ? 'Online' : 'Offline' }}</span>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <style scoped>
-/* For smooth slider toggle animation */
-input:checked + div + div {
-  transform: translateX(1.25rem); /* Adjust to match toggle width */
+/* Enhanced toggle animation */
+input:checked + div > div {
+  transform: translateX(1.25rem);
 }
 </style>

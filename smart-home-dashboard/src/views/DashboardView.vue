@@ -63,18 +63,29 @@ watch(selectedRoomId, () => {
 </script>
 
 <template>
-    <div class="max-w-7xl mx-auto p-4 sm:p-6 md:p-8">
-      <!-- Dynamic Navbar -->
-      <DashboardNavbar :selectedRoom="selectedRoomId" @room-selected="handleRoomSelected($event)"/>
+  <div class="max-w-7xl mx-auto">
+    <!-- Dynamic Navbar -->
+    <DashboardNavbar :selectedRoom="selectedRoomId" @room-selected="handleRoomSelected($event)"/>
   
-      <!-- Device Widgets -->
-      <div class="device-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-        <component
-          v-for="device in devicesInSelectedRoom"
-          :key="device.id"
-          :is="(deviceWidgetMap[device.type.toLowerCase()] || GenericDeviceWidget)"
-          :device="device"
-        />
-      </div>
+    <!-- Device Widgets -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <component
+        v-for="device in devicesInSelectedRoom"
+        :key="device.id"
+        :is="(deviceWidgetMap[device.type.toLowerCase()] || GenericDeviceWidget)"
+        :device="device"
+      />
     </div>
-  </template>
+    
+    <!-- Empty state when no devices -->
+    <div v-if="devicesInSelectedRoom.length === 0 && selectedRoomId" class="text-center py-12">
+      <div class="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+        <svg class="w-8 h-8 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.467.881-6.127 2.325.895-.449 1.933-.725 3.127-.725 1.194 0 2.232.276 3.127.725z"/>
+        </svg>
+      </div>
+      <h3 class="text-lg font-medium text-foreground mb-2">No devices found</h3>
+      <p class="text-muted-foreground">This room doesn't have any devices yet.</p>
+    </div>
+  </div>
+</template>

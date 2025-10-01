@@ -42,38 +42,64 @@ const register = async () => {
 </script>
 
 <template>
-  <div class="max-w-md mx-auto mt-10 bg-white p-6 rounded shadow-md">
-    <h2 class="text-2xl font-bold mb-4 text-center">Register Gateway</h2>
+  <div class="min-h-screen flex items-center justify-center p-4">
+    <div class="max-w-md w-full bg-card border border-border rounded-xl p-8 shadow-lg">
+      <div class="text-center mb-8">
+        <div class="w-16 h-16 bg-primary rounded-xl flex items-center justify-center mx-auto mb-4">
+          <svg class="w-8 h-8 text-primary-foreground" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z"/>
+          </svg>
+        </div>
+        <h2 class="text-2xl font-bold text-foreground">Register Gateway</h2>
+        <p class="text-muted-foreground mt-2">Create your smart home gateway</p>
+      </div>
 
-    <div v-if="error" class="text-red-600 mb-2">{{ error }}</div>
-    <div v-if="success" class="text-green-600 mb-2">Registration successful! Redirecting to login...</div>
-
-    <form @submit.prevent="register" class="space-y-4">
+      <div v-if="error" class="mb-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+        <p class="text-destructive text-sm">{{ error }}</p>
+      </div>
       
-        <label class="block text-sm font-medium text-gray-700">Gateway Name</label>
-        <input
+      <div v-if="success" class="mb-4 p-3 bg-success/10 border border-success/20 rounded-lg">
+        <p class="text-success text-sm">Registration successful! Redirecting to login...</p>
+      </div>
+
+      <form @submit.prevent="register" class="space-y-6">
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-foreground">Gateway Name</label>
+          <input
             v-model="name"
             type="text"
-            class="mt-1 block w-full border border-gray-300 rounded px-3 py-2"
+            class="w-full bg-background border border-border rounded-lg px-4 py-3 text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+            placeholder="Enter gateway name"
             required
-        />
+          />
+        </div>
 
-        
-        <label class="block text-sm font-medium text-gray-700">Password</label>
-        <input
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-foreground">Password</label>
+          <input
             v-model="password"
             type="password"
-            class="mt-1 block w-full border border-gray-300 rounded px-3 py-2"
+            class="w-full bg-background border border-border rounded-lg px-4 py-3 text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+            placeholder="Enter password"
             required
-        />
+          />
+        </div>
 
         <button
-            type="submit"
-            class="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
+          type="submit"
+          class="w-full bg-primary text-primary-foreground py-3 px-4 rounded-lg font-medium hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background transition-colors"
         >
-            Register
+          Register Gateway
         </button>
-    </form>
+      </form>
+
+      <div class="mt-6 text-center">
+        <p class="text-muted-foreground text-sm">
+          Already have a gateway? 
+          <router-link to="/login" class="text-primary hover:text-primary/80 font-medium">Sign in here</router-link>
+        </p>
+      </div>
+    </div>
   </div>
 </template>
 

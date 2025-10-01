@@ -7,9 +7,9 @@
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-700">
+  <div class="min-h-screen bg-background text-foreground">
     <Navbar></Navbar>  
-    <main class="p-4">
+    <main class="p-6">
       <router-view />
     </main>
   </div>
