@@ -12,6 +12,7 @@ const { fetchDevices } = useDeviceStore();
 
 const socketHandlers = {
   device_status: null,
+  motion_detected: null,
   test_pong: null
 }
 
@@ -21,12 +22,24 @@ const handleSocketUpdate = (data) => {
   if (device) device.available = data.available
 }
 
+const handleMotionDetectedUpdate = (data) => {
+  console.log('[INFO] Redceived motion_detected:', data)
+  const device = deviceStore.devices.find(d => d.id === data.id)
+  if (device) {
+    if(device.type.toLowerCase() === 'alarmsensor' || Object.prototype.hasOwnProperty.call(device.properties, 'motion_detected')) {
+      device.properties.motion_detected = data.motion_detected
+    }
+  }
+}
+
 onMounted(() => {
   fetchDevices();
   
   socketHandlers.device_status = handleSocketUpdate
+  socketHandlers.motion_detected = handleMotionDetectedUpdate
 
   socket.on('device_status', socketHandlers.device_status)
+  socket.on('motion_detected', socketHandlers.motion_detected)
 
   socket.on('connect_error', (err) => {
     console.error("[ERROR] Connection error:", err)
@@ -35,6 +48,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   if (socketHandlers.device_status) socket.off('device_status', socketHandlers.device_status)
+  if (socketHandlers.motion_detected) socket.off('motion_detected', socketHandlers.motion_detected)
 
   console.log('[INFO] Cleaned up all socket listeners')
 });

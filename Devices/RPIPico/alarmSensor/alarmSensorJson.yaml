@@ -1,0 +1,7 @@
+# JSON data for an alarmSensor device
+{
+    "properties": { 
+        "motion_detected" : False,  # "true" if motion detected
+        "is_alarm_enabled" : False # "true" if alarm turned on
+    }
+}

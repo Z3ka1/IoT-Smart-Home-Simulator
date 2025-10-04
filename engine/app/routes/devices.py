@@ -6,6 +6,7 @@ from threading import Event
 from datetime import datetime
 import time
 import sys
+import requests
 
 devices_bp = Blueprint('devices', __name__)
 
@@ -104,6 +105,16 @@ def pair_device():
     return jsonify({"message": "Device successfully registered", "device_id": new_device.id}), 201
 
 
+# Route for any device to ping server in order to keep its frontend widget alive
+# Used when device doesnt have property that is changed trough web interface
+@devices_bp.route('/devices/<int:device_id>/ping', methods=['POST'])
+def device_ping(device_id):
+    device = Device.query.filter_by(id = device.id).first()
+    if not device:
+        return jsonify({'error': 'Device not found'}), 404
+    device.last_seen = datetime.utcnow()
+    db.session.commit()
+    return jsonify({'status': 'ok'}), 200
 
 #Device: simpleLED
 @devices_bp.route('/devices/simpleled/<int:device_id>/state', methods=['PUT'])
@@ -142,3 +153,69 @@ def get_device_state(device_id):
     device.last_seen = datetime.utcnow()
     db.session.commit()
     return jsonify({'properties': device.properties or {}}), 200
+
+
+#Device: alarmSensor
+@devices_bp.route('/devices/alarmsensor/<int:device_id>/alarm_enabled', methods=['PUT'])
+def update_is_alarm_enabled(device_id):
+    gateway_id = request.headers.get('X-Gateway-ID')
+    if not gateway_id:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    device = Device.query.filter_by(id = device_id, gateway_id=gateway_id).first()
+    if not device:
+        return jsonify({'error': 'Device not found'}), 404
+    
+    data = request.get_json()
+    if 'is_alarm_enabled' not in data:
+        return jsonify({'error': 'Missing "is_alarm_enabled" field in request'}), 400
+    
+    properties = device.properties or {}
+    properties['is_alarm_enabled'] = data['is_alarm_enabled']
+
+    device.properties = properties
+    db.session.commit()
+
+    #print(f"props: {properties}", file = sys.stdout)
+    #print(f"props: {device.properties}", file = sys.stdout)
+    return jsonify({'message': 'Device state updated successfully', 'properties': properties}), 200
+
+@devices_bp.route('/devices/alarmsensor/<int:device_id>/alarm_enabled', methods = ['GET'])
+def get_is_alarm_enabled(device_id):
+    device = Device.query.filter_by(id = device_id).first()
+    if not device:
+        return jsonify({'error': 'Device not found'}), 404
+    device.last_seen = datetime.utcnow()
+    db.session.commit()
+    return jsonify({'properties':device.properties or {}}), 200
+
+@devices_bp.route('/devices/alarmsensor/<int:device_id>/motion_detected', methods = ['PUT'])
+def update_motion_detected(device_id):
+    device = Device.query.filter_by(id = device_id).first()
+    if not device:
+        return jsonify({'error': 'Device not found'}), 404
+    
+    device.last_seen = datetime.utcnow()
+
+    data = request.get_json()
+    unpackedProps = data['properties']
+    properties = device.properties or {}
+    properties['motion_detected'] = unpackedProps['motion_detected']
+
+    device.properties = properties
+    db.session.commit()
+
+    try:
+        response = requests.post(
+            f'http://localhost:8000/emit-motion_detected',
+            json={
+                'id': device.id,
+                'motion_detected': properties['motion_detected']
+            }
+        )
+        print(f"Emission status: {response.status_code}, Response: {response.json()}")
+    except Exception as e:
+        print(f"Failed to trigger emission: {str(e)}")
+    
+    #print(f"props: {device.properties}", file = sys.stdout)
+    return jsonify({'message': 'Device state updated successfully'}), 200

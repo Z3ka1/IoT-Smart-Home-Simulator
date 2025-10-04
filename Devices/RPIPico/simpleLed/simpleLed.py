@@ -8,7 +8,7 @@ import ujson as json
 SSID = ""
 PASSWORD = ""
 
-def connect_wifi(ssid, password):
+def try_connect(ssid, password):
     wlan = network.WLAN(network.STA_IF)
     wlan.active(True)
     wlan.connect(ssid, password)
@@ -26,13 +26,43 @@ def connect_wifi(ssid, password):
     print("\nConnected. IP address:", wlan.ifconfig()[0])
     return True
 
+def get_new_credentials():
+    print("Enter new WiFi credentials:")
+    ssid = input("SSID: ")
+    password = input("Password: ")
+    
+    if try_connect(ssid, password):
+        with open('wifi_creds.txt', 'w') as f:
+            f.write(ssid + '\n')
+            f.write(password + '\n')
+        print("New credentials saved successfuly!")
+        return True
+    else:
+        print("Failed to connect with new credentials.")
+        return False
 
-#
+def connect_wifi():
+    try:
+        with open('wifi_creds.txt', 'r') as f:
+            lines = f.readlines()
+            if len(lines) >= 2:
+                ssid = lines[0].strip()
+                password = lines[1].strip()
+                print(f"Found saved credentials for: {ssid}")
+                
+                if try_connect(ssid, password):
+                    return True
+    except:
+        print("No saved credentials found or file error")
+        
+    return get_new_credentials()
+
+
+#Device implementation
 DEVICE_TYPE = "simpleled"
-BACKEND_URL = "http://192.168.0.31:8000"
+BACKEND_URL = "http://192.168.0.27:8000"
 POLL_TIME = 2 #In seconds, how often device pols for new data
 
-# TODO : Ova polja mozda ucitati iz nekog fajla ako je vec ranije dobio id i sl.
 device_id = None
 current_state = None
 
@@ -101,11 +131,14 @@ def poll_state():
         time.sleep(POLL_TIME)
 
 
-connect_wifi(SSID, PASSWORD)
+if SSID != "" and PASSWORD != "":
+    try_connect(SSID, PASSWORD)
+else:
+    connect_wifi()
 print("\n\n")
 
 device_id = load_device_id()
-#print(f"device_id = {device_id}")
+print(f"device_id = {device_id}")
 if device_id == None:
     input("Press Enter to pair this device")
     pair_device()
