@@ -3,10 +3,12 @@ import LightWidget from "@/components/devices/LightWidget.vue";
 import ThermometerWidget from "@/components/devices/ThermometerWidget.vue";
 import SimpleLEDWidget from "@/components/devices/SimpleLEDWidget.vue";
 import AlarmSensorWidget from "@/components/devices/AlarmSensorWidget.vue";
+import RGBStripWidget from "@/components/devices/RGBStripWidget.vue";
 
 export const deviceWidgetMap = {
     light: LightWidget,
     thermometer: ThermometerWidget,
     simpleled: SimpleLEDWidget,
-    alarmsensor: AlarmSensorWidget
+    alarmsensor: AlarmSensorWidget,
+    rgbstrip: RGBStripWidget,
 }

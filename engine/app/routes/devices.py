@@ -219,3 +219,96 @@ def update_motion_detected(device_id):
     
     #print(f"props: {device.properties}", file = sys.stdout)
     return jsonify({'message': 'Device state updated successfully'}), 200
+
+
+#Device: RGBStrip
+@devices_bp.route('/devices/rgbstrip/<int:device_id>/poll_properties', methods = ['GET'])
+def get_rgb_strip_properties(device_id):
+    device = Device.query.filter_by(id = device_id).first()
+    if not device:
+        return jsonify({'error': 'Device not found'}), 404
+    
+    device.last_seen = datetime.utcnow()
+    db.session.commit()
+    return jsonify({'properties': device.properties or {}}), 200
+
+@devices_bp.route('/devices/rgbstrip/<int:device_id>/state', methods = ['PUT'])
+def update_rgb_strip_state(device_id):
+    gateway_id = request.headers.get('X-Gateway-ID')
+    if not gateway_id:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    device = Device.query.filter_by(id = device_id, gateway_id=gateway_id).first()
+    if not device:
+        return jsonify({'error': 'Device not found'}), 404
+    
+    data = request.get_json()
+
+    if 'state' not in data:
+        return jsonify({'error': 'Missing "state" field in request'}), 400    
+    
+    if data['state'] == True:
+        state = "on"
+    else:
+        state = "off"
+    properties = device.properties or {}
+    properties['state'] = state
+
+    device.properties = properties
+    db.session.commit()
+
+    #print(f"props: {properties}", file = sys.stdout)
+    #print(f"props: {device.properties}", file = sys.stdout)
+    return jsonify({'message': 'Device state updated successfully'}), 200
+
+@devices_bp.route('/devices/rgbstrip/<int:device_id>/color', methods = ['PUT'])
+def update_rgb_strip_color(device_id):
+    gateway_id = request.headers.get('X-Gateway-ID')
+    if not gateway_id:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    device = Device.query.filter_by(id = device_id, gateway_id=gateway_id).first()
+    if not device:
+        return jsonify({'error': 'Device not found'}), 404
+    
+    data = request.get_json()
+
+    if 'red' not in data or 'green' not in data or 'blue' not in data:
+        return jsonify({'error': 'Missing "RGB" fields in request'}), 400    
+    
+    properties = device.properties or {}
+    properties['red'] = data['red']
+    properties['green'] = data['green']
+    properties['blue'] = data['blue']
+
+    device.properties = properties
+    db.session.commit()
+
+    #print(f"props: {properties}", file = sys.stdout)
+    #print(f"props: {device.properties}", file = sys.stdout)
+    return jsonify({'message': 'Device state updated successfully'}), 200
+
+@devices_bp.route('/devices/rgbstrip/<int:device_id>/brightness', methods = ['PUT'])
+def update_rgb_strip_brightness(device_id):
+    gateway_id = request.headers.get('X-Gateway-ID')
+    if not gateway_id:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    device = Device.query.filter_by(id = device_id, gateway_id=gateway_id).first()
+    if not device:
+        return jsonify({'error': 'Device not found'}), 404
+    
+    data = request.get_json()
+
+    if 'brightness' not in data:
+        return jsonify({'error': 'Missing "brightness" field in request'}), 400    
+    
+    properties = device.properties or {}
+    properties['brightness'] = data['brightness'] / 100
+
+    device.properties = properties
+    db.session.commit()
+
+    #print(f"props: {properties}", file = sys.stdout)
+    #print(f"props: {device.properties}", file = sys.stdout)
+    return jsonify({'message': 'Device state updated successfully'}), 200

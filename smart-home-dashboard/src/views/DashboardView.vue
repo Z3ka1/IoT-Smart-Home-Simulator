@@ -82,7 +82,7 @@ watch(selectedRoomId, () => {
     <DashboardNavbar :selectedRoom="selectedRoomId" @room-selected="handleRoomSelected($event)"/>
   
     <!-- Device Widgets -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-start">
       <component
         v-for="device in devicesInSelectedRoom"
         :key="device.id"
