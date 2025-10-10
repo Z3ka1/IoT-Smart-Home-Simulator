@@ -139,7 +139,7 @@ watch(brightness, (newValue, oldValue) => {
 
 <template>
   <div class="bg-card border border-border rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200 group"
-      :class="{'opacity-50 grayscale pointer-events-none': !isAvailable}">
+      :class="{'opacity-50 grayscale': !isAvailable}">
     
     <!-- Header with device info and toggle -->
     <div class="flex items-start justify-between mb-4">

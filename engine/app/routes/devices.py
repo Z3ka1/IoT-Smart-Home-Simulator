@@ -116,7 +116,7 @@ def device_ping(device_id):
     db.session.commit()
     return jsonify({'status': 'ok'}), 200
 
-#Device: simpleLED
+#region simpleLED
 @devices_bp.route('/devices/simpleled/<int:device_id>/state', methods=['PUT'])
 def update_device_state(device_id):
     gateway_id = request.headers.get('X-Gateway-ID')
@@ -154,8 +154,9 @@ def get_device_state(device_id):
     db.session.commit()
     return jsonify({'properties': device.properties or {}}), 200
 
+#endregion
 
-#Device: alarmSensor
+#region alarmSensor
 @devices_bp.route('/devices/alarmsensor/<int:device_id>/alarm_enabled', methods=['PUT'])
 def update_is_alarm_enabled(device_id):
     gateway_id = request.headers.get('X-Gateway-ID')
@@ -220,8 +221,9 @@ def update_motion_detected(device_id):
     #print(f"props: {device.properties}", file = sys.stdout)
     return jsonify({'message': 'Device state updated successfully'}), 200
 
+#endregion
 
-#Device: RGBStrip
+#region RGBStrip
 @devices_bp.route('/devices/rgbstrip/<int:device_id>/poll_properties', methods = ['GET'])
 def get_rgb_strip_properties(device_id):
     device = Device.query.filter_by(id = device_id).first()
@@ -309,6 +311,91 @@ def update_rgb_strip_brightness(device_id):
     device.properties = properties
     db.session.commit()
 
-    #print(f"props: {properties}", file = sys.stdout)
-    #print(f"props: {device.properties}", file = sys.stdout)
     return jsonify({'message': 'Device state updated successfully'}), 200
+
+#endregion
+
+#region LCDDisplay
+@devices_bp.route('/devices/lcddisplay/<int:device_id>/poll_properties', methods = ['GET'])
+def get_lcd_display_properties(device_id):
+    device = Device.query.filter_by(id = device_id).first()
+    if not device:
+        return jsonify({'error': 'Device not found'}), 404
+    
+    device.last_seen = datetime.utcnow()
+    db.session.commit()
+    return jsonify({'properties': device.properties or {}}), 200
+
+@devices_bp.route('/devices/lcddisplay/<int:device_id>/state', methods = ['PUT'])
+def update_lcd_display_state(device_id):
+    gateway_id = request.headers.get('X-Gateway-ID')
+    if not gateway_id:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    device = Device.query.filter_by(id = device_id, gateway_id=gateway_id).first()
+    if not device:
+        return jsonify({'error': 'Device not found'}), 404
+    
+    data = request.get_json()
+
+    if 'state' not in data:
+        return jsonify({'error': 'Missing "state" field in request'}), 400    
+    
+    properties = device.properties or {}
+    properties['state'] = data['state']
+
+    device.properties = properties
+    db.session.commit()
+
+    return jsonify({'message': 'Device state updated successfully'}), 200
+
+@devices_bp.route('/devices/lcddisplay/<int:device_id>/text', methods = ['PUT'])
+def update_lcd_display_text(device_id):
+    gateway_id = request.headers.get('X-Gateway-ID')
+    if not gateway_id:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    device = Device.query.filter_by(id = device_id, gateway_id=gateway_id).first()
+    if not device:
+        return jsonify({'error': 'Device not found'}), 404
+    
+    data = request.get_json()
+
+    if 'first_line_text' not in data:
+        return jsonify({'error': 'Missing "first_line_text" field in request'}), 400
+    if 'second_line_text' not in data:
+        return jsonify({'error': 'Missing "second_line_text" field in request'}), 400
+    
+    properties = device.properties or {}
+    properties['first_line_text'] = data['first_line_text']
+    properties['second_line_text'] = data['second_line_text']
+
+    device.properties = properties
+    db.session.commit()
+
+    return jsonify({'message': 'Device state updated successfully'}), 200
+
+@devices_bp.route('/devices/lcddisplay/<int:device_id>/theme', methods = ['PUT'])
+def update_lcd_display_theme(device_id):
+    gateway_id = request.headers.get('X-Gateway-ID')
+    if not gateway_id:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    device = Device.query.filter_by(id = device_id, gateway_id=gateway_id).first()
+    if not device:
+        return jsonify({'error': 'Device not found'}), 404
+    
+    data = request.get_json()
+
+    if 'display_theme' not in data:
+        return jsonify({'error': 'Missing "display_theme" field in request'}), 400    
+    
+    properties = device.properties or {}
+    properties['display_theme'] = data['display_theme']
+
+    device.properties = properties
+    db.session.commit()
+
+    return jsonify({'message': 'Device state updated successfully'}), 200
+
+#endregion

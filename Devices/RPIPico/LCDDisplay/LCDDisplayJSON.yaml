@@ -1,0 +1,10 @@
+# JSON data for a LCDDisplay device
+{
+    "properties": { 
+        "state": "off",
+        "first_line_text": "",  # Text displayed on the first line up to 16 characters
+        "second_line_text" : "",
+        "display_theme": "matrix-green"
+        # Available themes: purple-haze, lime-burst, matrix-green, amber-glow, solar-flare, midnight-blue, crimson, electric-lime
+    }
+}
