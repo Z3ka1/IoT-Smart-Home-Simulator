@@ -1,3 +1,4 @@
+from NETWORKING import try_connect, get_new_credentials, connect_wifi, discover_server, save_device_id, load_device_id
 from machine import Pin
 import network
 import urequests as requests
@@ -5,77 +6,16 @@ import ujson as json
 import RGB1602
 import time
 import math
+import socket
 
 #WIFI connection
 SSID = ""
 PASSWORD = ""
 
-def try_connect(ssid, password):
-    wlan = network.WLAN(network.STA_IF)
-    wlan.active(True)
-    wlan.connect(ssid, password)
-    
-    print("Connecting to WiFi", end="")
-    timeout = 10
-    start = time.time()
-    while not wlan.isconnected():
-        print(".", end = "")
-        if time.time() - start > timeout:
-            print("\nConnection timed out.")
-            return False
-        time.sleep(1)
-    
-    print("\nConnected. IP address:", wlan.ifconfig()[0])
-    return True
-
-def get_new_credentials():
-    print("Enter new WiFi credentials:")
-    ssid = input("SSID: ")
-    password = input("Password: ")
-    
-    if try_connect(ssid, password):
-        with open('wifi_creds.txt', 'w') as f:
-            f.write(ssid + '\n')
-            f.write(password + '\n')
-        print("New credentials saved successfuly!")
-        return True
-    else:
-        print("Failed to connect with new credentials.")
-        return False
-
-def connect_wifi():
-    try:
-        with open('wifi_creds.txt', 'r') as f:
-            lines = f.readlines()
-            if len(lines) >= 2:
-                ssid = lines[0].strip()
-                password = lines[1].strip()
-                print(f"Found saved credentials for: {ssid}")
-                
-                if try_connect(ssid, password):
-                    return True
-    except:
-        print("No saved credentials found or file error")
-        
-    return get_new_credentials()
-
-
 #Device implementation
 DEVICE_TYPE = "lcddisplay"
-BACKEND_URL = "http://192.168.0.41:8000"
 
 device_id = None
-
-def save_device_id(device_id):
-    with open("device_id.txt", "w") as f:
-        f.write(str(device_id))
-        
-def load_device_id():
-    try:
-        with open("device_id.txt", "r") as f:
-            return f.read().strip()
-    except OSError:
-        return None
 
 def pair_device():
     global device_id
@@ -124,8 +64,8 @@ colorG = 128
 colorB = 60
 
 lcd=RGB1602.RGB1602(16,2)
-#lcd.clear()
-#lcd.setRGB(0,0,0)
+lcd.clear()
+lcd.setRGB(0,0,0)
 
 first_line_text = ""
 second_line_text = ""
@@ -171,6 +111,9 @@ if SSID != "" and PASSWORD != "":
     try_connect(SSID, PASSWORD)
 else:
     connect_wifi()
+
+server_ip, server_port = discover_server()
+BACKEND_URL = f'http://{server_ip}:{server_port}'
 print("\n\n")
 
 device_id = load_device_id()
@@ -179,18 +122,21 @@ if device_id == None:
     input("Press Enter to pair this device")
     pair_device()
 
-while True:
-    poll_properties()
-    if current_state and change_detected:
-        lcd.clear()
-        lcd.setRGB(colorR, colorG, colorB)
-        lcd.setCursor(0, 0)
-        lcd.printout(first_line_text)
-        lcd.setCursor(0, 1)
-        lcd.printout(second_line_text)
-        
-        change_detected = False
-    elif not current_state:
-        lcd.setRGB(0, 0, 0)
-    time.sleep(POLL_TIME)
-
+try:
+    while True:
+        poll_properties()
+        if current_state and change_detected:
+            lcd.clear()
+            lcd.setRGB(colorR, colorG, colorB)
+            lcd.setCursor(0, 0)
+            lcd.printout(first_line_text)
+            lcd.setCursor(0, 1)
+            lcd.printout(second_line_text)
+            
+            change_detected = False
+        elif not current_state:
+            lcd.setRGB(0, 0, 0)
+        time.sleep(POLL_TIME)
+except KeyboardInterrupt:
+    print("Turning off display...")
+    lcd.setRGB(0, 0, 0)

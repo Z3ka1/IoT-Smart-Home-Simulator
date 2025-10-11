@@ -1,3 +1,4 @@
+from NETWORKING import try_connect, get_new_credentials, connect_wifi, discover_server, save_device_id, load_device_id
 from ws2812b import WS2812
 import time
 import network
@@ -8,59 +9,8 @@ import ujson as json
 SSID = ""
 PASSWORD = ""
 
-def try_connect(ssid, password):
-    wlan = network.WLAN(network.STA_IF)
-    wlan.active(True)
-    wlan.connect(ssid, password)
-    
-    print("Connecting to WiFi", end="")
-    timeout = 10
-    start = time.time()
-    while not wlan.isconnected():
-        print(".", end = "")
-        if time.time() - start > timeout:
-            print("\nConnection timed out.")
-            return False
-        time.sleep(1)
-    
-    print("\nConnected. IP address:", wlan.ifconfig()[0])
-    return True
-
-def get_new_credentials():
-    print("Enter new WiFi credentials:")
-    ssid = input("SSID: ")
-    password = input("Password: ")
-    
-    if try_connect(ssid, password):
-        with open('wifi_creds.txt', 'w') as f:
-            f.write(ssid + '\n')
-            f.write(password + '\n')
-        print("New credentials saved successfuly!")
-        return True
-    else:
-        print("Failed to connect with new credentials.")
-        return False
-
-def connect_wifi():
-    try:
-        with open('wifi_creds.txt', 'r') as f:
-            lines = f.readlines()
-            if len(lines) >= 2:
-                ssid = lines[0].strip()
-                password = lines[1].strip()
-                print(f"Found saved credentials for: {ssid}")
-                
-                if try_connect(ssid, password):
-                    return True
-    except:
-        print("No saved credentials found or file error")
-        
-    return get_new_credentials()
-
-
 #Device implementation
 DEVICE_TYPE = "rgbstrip"
-BACKEND_URL = "http://192.168.0.27:8000"
 POLL_TIME = 2 #In seconds, how often device pols for new data
 
 device_id = None
@@ -74,17 +24,6 @@ green = 0
 blue = 0
 brightness = 0.1
 current_state = "off"
-
-def save_device_id(device_id):
-    with open("device_id.txt", "w") as f:
-        f.write(str(device_id))
-        
-def load_device_id():
-    try:
-        with open("device_id.txt", "r") as f:
-            return f.read().strip()
-    except OSError:
-        return None
 
 def pair_device():
     global device_id
@@ -156,6 +95,9 @@ if SSID != "" and PASSWORD != "":
     try_connect(SSID, PASSWORD)
 else:
     connect_wifi()
+    
+server_ip, server_port = discover_server()
+BACKEND_URL = f'http://{server_ip}:{server_port}'
 print("\n\n")
 
 device_id = load_device_id()
@@ -164,13 +106,17 @@ if device_id == None:
     input("Press Enter to pair this device")
     pair_device()
     
-while True:
-    poll_properties()
-    if current_state == "on":
-        strip.set_brightness(brightness)
-        strip.fill((red, green, blue))
-    else:
-        strip.clear()
+try:
+    while True:
+        poll_properties()
+        if current_state == "on":
+            strip.set_brightness(brightness)
+            strip.fill((red, green, blue))
+        else:
+            strip.clear()
+        strip.show()
+        time.sleep(POLL_TIME)
+except KeyboardInterrupt:
+    print("RGB Strip is turning off...")
+    strip.clear()
     strip.show()
-    time.sleep(POLL_TIME)
-    
