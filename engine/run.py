@@ -77,6 +77,34 @@ def emit_motion_detected():
             'message': str(e)
         }), 500
 
+@app.route('/emit-weather_station_measurements', methods=['POST'])
+def emit_weather_station_measurements():
+    from flask import request, jsonify
+    try:
+        data = request.get_json()
+        socketio.emit('weather_station_measurements', {
+            'id': data['id'],
+            'temperature': data['temperature'],
+            'humidity': data['humidity'],
+            'city': data['city'],
+            'api_temperature': data['api_temperature'],
+            'api_weather_description': data['api_weather_description'],
+            'api_feels_like': data['api_feels_like'],
+            'api_pressure': data['api_pressure'],
+            'api_humidity': data['api_humidity'],
+            'last_measurement': data['last_measurement']
+        }, namespace='/')
+
+        active_clients = len(socketio.server.manager.rooms.get('/', []))
+        return jsonify({
+            'status': 'success',
+            'active_clients': active_clients
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
 
 if __name__ == '__main__':
     start_discovery_server(port = 50000)

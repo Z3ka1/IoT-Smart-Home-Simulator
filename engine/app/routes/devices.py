@@ -3,7 +3,7 @@ from app.models.device import Device
 from app.models.gateway import Gateway
 from app import db
 from threading import Event
-from datetime import datetime
+from datetime import datetime, timedelta
 import time
 import sys
 import requests
@@ -107,9 +107,9 @@ def pair_device():
 
 # Route for any device to ping server in order to keep its frontend widget alive
 # Used when device doesnt have property that is changed trough web interface
-@devices_bp.route('/devices/<int:device_id>/ping', methods=['POST'])
+@devices_bp.route('/devices/<int:device_id>/ping', methods=['GET'])
 def device_ping(device_id):
-    device = Device.query.filter_by(id = device.id).first()
+    device = Device.query.filter_by(id = device_id).first()
     if not device:
         return jsonify({'error': 'Device not found'}), 404
     device.last_seen = datetime.utcnow()
@@ -397,5 +397,57 @@ def update_lcd_display_theme(device_id):
     db.session.commit()
 
     return jsonify({'message': 'Device state updated successfully'}), 200
+
+#endregion
+
+#region weatherStation
+@devices_bp.route('/devices/weatherstation/<int:device_id>/measurements', methods = ['PUT'])
+def update_weather_station_measurements(device_id):
+    device = Device.query.filter_by(id = device_id).first()
+    if not device:
+        return jsonify({'error': 'Device not found'}), 404
+    
+    device.last_seen = datetime.utcnow()
+
+    data = request.get_json()
+    unpackedProps = data['properties']
+    properties = device.properties or {}
+    properties['temperature'] = unpackedProps['temperature']
+    properties['humidity'] = unpackedProps['humidity']
+    properties['city'] = unpackedProps['city']
+    properties['api_temperature'] = unpackedProps['api_temperature']
+    properties['api_weather_description'] = unpackedProps['api_weather_description']
+    properties['api_feels_like'] = unpackedProps['api_feels_like']
+    properties['api_pressure'] = unpackedProps['api_pressure']
+    properties['api_humidity'] = unpackedProps['api_humidity']
+    utc_time = datetime.utcnow() + timedelta(hours=2)
+    properties['last_measurement'] = utc_time.strftime('%d.%m %H:%M:%S')
+
+    device.properties = properties
+    db.session.commit()
+
+    try:
+        response = requests.post(
+            f'http://localhost:8000/emit-weather_station_measurements',
+            json={
+                'id': device.id,
+                'temperature': properties['temperature'],
+                'humidity': properties['humidity'],
+                'city': properties['city'],
+                'api_temperature': properties['api_temperature'],
+                'api_weather_description': properties['api_weather_description'],
+                'api_feels_like': properties['api_feels_like'],
+                'api_pressure': properties['api_pressure'],
+                'api_humidity': properties['api_humidity'],
+                'last_measurement': properties['last_measurement']
+            }
+        )
+        print(f"Emission status: {response.status_code}, Response: {response.json()}")
+    except Exception as e:
+        print(f"Failed to trigger emission: {str(e)}")
+    
+    #print(f"props: {device.properties}", file = sys.stdout)
+    return jsonify({'message': 'Device measurements updated'}), 200
+
 
 #endregion

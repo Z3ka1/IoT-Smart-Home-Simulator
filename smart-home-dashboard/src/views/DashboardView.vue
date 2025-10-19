@@ -13,6 +13,7 @@ const { fetchDevices } = useDeviceStore();
 const socketHandlers = {
   device_status: null,
   motion_detected: null,
+  weather_station_measurements: null,
   test_pong: null
 }
 
@@ -32,14 +33,35 @@ const handleMotionDetectedUpdate = (data) => {
   }
 }
 
+const handleWeatherStationMeasurementsUpdate = (data) => {
+  console.log('[INFO] Received weather station measurements:', data)
+  const device = deviceStore.devices.find(d => d.id === data.id)
+  if (device) {
+    if (device.type.toLowerCase() === 'weatherstation' || (Object.prototype.hasOwnProperty.call(device.properties, 'temperature') 
+      && Object.prototype.hasOwnProperty.call(device.properties, 'humidity'))) {
+        device.properties.temperature = data.temperature
+        device.properties.humidity = data.humidity
+        device.properties.city = data.city
+        device.properties.api_temperature = data.api_temperature
+        device.properties.api_weather_description = data.api_weather_description
+        device.properties.api_feels_like = data.api_feels_like
+        device.properties.api_pressure = data.api_pressure
+        device.properties.api_humidity = data.api_humidity
+        device.properties.last_measurement = data.last_measurement
+    }
+  }
+}
+
 onMounted(() => {
   fetchDevices();
   
   socketHandlers.device_status = handleSocketUpdate
   socketHandlers.motion_detected = handleMotionDetectedUpdate
+  socketHandlers.weather_station_measurements = handleWeatherStationMeasurementsUpdate
 
   socket.on('device_status', socketHandlers.device_status)
   socket.on('motion_detected', socketHandlers.motion_detected)
+  socket.on('weather_station_measurements', socketHandlers.weather_station_measurements)
 
   socket.on('connect_error', (err) => {
     console.error("[ERROR] Connection error:", err)
@@ -49,6 +71,7 @@ onMounted(() => {
 onUnmounted(() => {
   if (socketHandlers.device_status) socket.off('device_status', socketHandlers.device_status)
   if (socketHandlers.motion_detected) socket.off('motion_detected', socketHandlers.motion_detected)
+  if (socketHandlers.weather_station_measurements) socket.off('weather_station_measurements', socketHandlers.weather_station_measurements)
 
   console.log('[INFO] Cleaned up all socket listeners')
 });

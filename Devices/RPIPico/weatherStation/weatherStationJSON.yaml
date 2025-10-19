@@ -1,0 +1,14 @@
+# JSON data for a weatherStation device
+{
+    "properties": { 
+        "temperature" : 0,    # Measured temperature
+        "humidity" : 0,       # Measured humidity
+        "city": "Novi Sad",
+        "last_measurement": "30.08 12:34:56", # Timestamp of the last measurement
+        "api_temperature": 0,
+        "api_weather_description": "",  # OpenWeatherMap Description (Clear, Clouds, Rain, Drizzle, Thunderstorm, Snow, Mist, Smoke, Haze, Dust, Fog, Sand, Ash, Squall, Tornado)
+        "api_feels_like": 0,
+        "api_pressure": 0,
+        "api_humidity": 0
+    }
+}
