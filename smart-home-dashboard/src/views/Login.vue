@@ -19,7 +19,12 @@ const handleLogin = async () => {
     })
 
     if (response.status === 200) {
-      auth.login(name.value, response.data.id)
+      auth.login(
+        response.data.gateway_name,
+        response.data.gateway_id,
+        response.data.access_token,
+        response.data.refresh_token
+      )
       router.push('/')
     }
   } catch (err) {

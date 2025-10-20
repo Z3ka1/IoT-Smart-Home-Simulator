@@ -1,6 +1,6 @@
 <script setup>
 import { ref, watch, onMounted } from 'vue'
-import axios from 'axios'
+import axios from '../../utils/axios'
 import debounce from 'lodash/debounce'
 
 const props = defineProps({ device: Object })
@@ -66,8 +66,6 @@ const updateDeviceState = debounce(async (newValue) => {
   try {
     await axios.put(`http://localhost:8000/api/devices/rgbstrip/${props.device.id}/state`, {
       state: newValue
-    }, {
-      headers: {'X-Gateway-ID': localStorage.getItem('gatewayId') || ''}
     })
     console.log(`RGB Strip ${newValue ? 'ON' : 'OFF'}`)
   } catch (error) {
@@ -87,8 +85,6 @@ const updateColor = debounce(async () => {
       red: red.value,
       green: green.value,
       blue: blue.value
-    }, {
-      headers: {'X-Gateway-ID': localStorage.getItem('gatewayId') || ''}
     })
     console.log(`RGB Strip color updated: R${red.value} G${green.value} B${blue.value}`)
   } catch (error) {
@@ -105,8 +101,6 @@ const updateBrightness = debounce(async (newValue) => {
   try {
     await axios.put(`http://localhost:8000/api/devices/rgbstrip/${props.device.id}/brightness`, {
       brightness: newValue
-    }, {
-      headers: {'X-Gateway-ID': localStorage.getItem('gatewayId') || ''}
     })
     console.log(`RGB Strip brightness: ${newValue}%`)
   } catch (error) {

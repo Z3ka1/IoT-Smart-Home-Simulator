@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, onMounted } from 'vue'
-import axios from 'axios'
+import axios from '../utils/axios'
 
 export const useRoomStore = defineStore('room', () => {
   const rooms = ref([])
@@ -9,11 +9,8 @@ export const useRoomStore = defineStore('room', () => {
   const fetchRooms = async () => {
     try {
         isLoading.value = true
-        const gatewayId = localStorage.getItem('gatewayId')
 
-        const res = await axios.get('http://localhost:8000/api/rooms', {
-          headers: {'X-Gateway-ID': gatewayId}
-        })
+        const res = await axios.get('http://localhost:8000/api/rooms')
 
         rooms.value = res.data
     } catch (error) {

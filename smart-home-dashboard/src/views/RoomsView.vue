@@ -3,7 +3,7 @@ import { onMounted, computed, ref } from 'vue'
 import { useRoomStore } from '@/stores/roomStore'
 import { useAuthStore } from '@/stores/auth'
 import PopupWindow from '@/components/PopupWindow.vue'
-import axios from 'axios'
+import axios from '../utils/axios'
 
 const roomStore = useRoomStore()
 const authStore = useAuthStore()
@@ -18,8 +18,7 @@ const addNewRoom = async () => {
 
     try {
       const response = await axios.post('http://localhost:8000/api/rooms', {
-      name: newRoomName.value,
-      gatewayId: authStore.gatewayId
+      name: newRoomName.value
       })
       if (response.status === 201) {
         roomStore.addRoom( {id: response.data.id, gateway_id: response.data.gateway_id, name: newRoomName.value} )

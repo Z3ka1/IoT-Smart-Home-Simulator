@@ -1,6 +1,6 @@
 <script setup>
 import { ref, watch, onMounted } from 'vue'
-import axios from 'axios'
+import axios from '../../utils/axios'
 import debounce from 'lodash/debounce'
 
 const props = defineProps({ device: Object })
@@ -34,12 +34,7 @@ const updateDeviceState = debounce(async newValue => {
   try {
     await axios.put(
       `http://localhost:8000/api/devices/alarmsensor/${props.device.id}/alarm_enabled`,
-      { is_alarm_enabled: newValue },
-      {
-        headers: {
-          'X-Gateway-ID': localStorage.getItem('gatewayId') || ''
-        }
-      }
+      { is_alarm_enabled: newValue }
     )
     console.log(`Alarm ${newValue ? 'ENABLED' : 'DISABLED'}`)
   } catch (error) {

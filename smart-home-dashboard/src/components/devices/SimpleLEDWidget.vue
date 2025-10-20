@@ -1,6 +1,6 @@
 <script setup>
 import { ref, watch, onMounted, watchEffect, onUnmounted } from 'vue'
-import axios from 'axios'
+import axios from '../../utils/axios'
 import debounce from 'lodash/debounce'
 
 const props = defineProps({ device: Object })
@@ -26,8 +26,6 @@ const updateDeviceState = debounce(async (newValue) => {
     try {
         await axios.put(`http://localhost:8000/api/devices/simpleled/${props.device.id}/state`, {
             state: newValue
-        }, {
-            headers: {'X-Gateway-ID': localStorage.getItem('gatewayId') || ''}
         })
         console.log(`LED light ${newValue ? 'ON' : 'OFF'}`)
     } catch (error) {

@@ -1,6 +1,6 @@
 <script setup>
 import { ref, watch, onMounted, computed } from 'vue'
-import axios from 'axios'
+import axios from '../../utils/axios'
 import debounce from 'lodash/debounce'
 
 const props = defineProps({ device: Object })
@@ -96,8 +96,6 @@ const updateDeviceState = debounce(async (newValue) => {
   try {
     await axios.put(`http://localhost:8000/api/devices/lcddisplay/${props.device.id}/state`, {
       state: newValue
-    }, {
-      headers: {'X-Gateway-ID': localStorage.getItem('gatewayId') || ''}
     })
     console.log(`LCD Display ${newValue ? 'ON' : 'OFF'}`)
   } catch (error) {
@@ -124,8 +122,6 @@ const updateText = async () => {
     await axios.put(`http://localhost:8000/api/devices/lcddisplay/${props.device.id}/text`, {
       first_line_text: firstLineInput.value,
       second_line_text: secondLineInput.value
-    }, {
-      headers: {'X-Gateway-ID': localStorage.getItem('gatewayId') || ''}
     })
     firstLineText.value = firstLineInput.value
     secondLineText.value = secondLineInput.value
@@ -144,8 +140,6 @@ const updateTheme = debounce(async (newTheme) => {
   try {
     await axios.put(`http://localhost:8000/api/devices/lcddisplay/${props.device.id}/theme`, {
       display_theme: newTheme
-    }, {
-      headers: {'X-Gateway-ID': localStorage.getItem('gatewayId') || ''}
     })
     console.log(`LCD Display theme updated to ${newTheme}`)
   } catch (error) {

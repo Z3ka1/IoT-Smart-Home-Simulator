@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
-import { ref, onMounted } from 'vue'
-import axios from 'axios'
+import { ref, onMounted, computed } from 'vue'
+import axios from '../utils/axios'
 
 export const useDeviceStore = defineStore('device', () => {
   const devices = ref([])
@@ -9,11 +9,8 @@ export const useDeviceStore = defineStore('device', () => {
   const fetchDevices = async () => {
     try {
         isLoading.value = true
-        const gatewayId = localStorage.getItem('gatewayId')
+        const res = await axios.get('http://localhost:8000/api/devices')
 
-        const res = await axios.get('http://localhost:8000/api/devices', {
-          headers: {'X-Gateway-ID': gatewayId}
-        })
         devices.value = res.data
         console.log('Devices fetched:', devices.value)
     } catch (error) {
@@ -28,7 +25,7 @@ export const useDeviceStore = defineStore('device', () => {
   }); 
 
   const getDevicesByRoomId = (roomId) => {
-    return computed(() => devices.value.filter(device => device.roomId === roomId));
+    return computed(() => devices.value.filter((device) => device.roomId === roomId));
   }
 
 

@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { useRoomStore } from '@/stores/roomStore'
-import axios from 'axios'
+import axios from '../utils/axios'
 
 const name = ref('')
 const description = ref('')
@@ -11,8 +11,6 @@ const statusMessage = ref('')
 const progress = ref(0)
 
 const roomStore = useRoomStore()
-roomStore.fetchRooms()
-const rooms = roomStore.rooms
 
 const pairingDuration = 60 // seconds
 
@@ -34,15 +32,11 @@ const startPairing = async () => {
   }, 1000)
 
   try {
-    const gatewayId = localStorage.getItem('gatewayId')
-
     const res = await axios.post('http://localhost:8000/api/start-pairing', {
       name: name.value,
       room_id: roomId.value,
       description: description.value,
       type: 'generic'
-    }, {
-      headers: { 'X-Gateway-ID': gatewayId }
     })
 
     statusMessage.value = res.data.message || 'Device successfully paired!'
@@ -58,6 +52,10 @@ const startPairing = async () => {
     progress.value = 100
   }
 }
+
+onMounted(() => {
+  roomStore.fetchRooms()
+})
 </script>
 
 <template>

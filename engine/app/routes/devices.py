@@ -7,14 +7,14 @@ from datetime import datetime, timedelta
 import time
 import sys
 import requests
+from ..utils.jwt_utils import token_required
 
 devices_bp = Blueprint('devices', __name__)
 
 @devices_bp.route('/devices', methods=['GET'])
+@token_required
 def get_devices():
-    gateway_id = request.headers.get('X-Gateway-ID')
-    if not gateway_id:
-        return jsonify({'error': 'Unauthorized'}), 401
+    gateway_id = request.gateway_id # Get ID from JWT token
 
     gateway = Gateway.query.get(gateway_id)
     if not gateway:
@@ -38,6 +38,7 @@ def get_devices():
 pending_pairing = None  # holds a dict or None
 
 @devices_bp.route('/start-pairing', methods=['POST'])
+@token_required
 def start_pairing():
     global pending_pairing
     data = request.get_json()
@@ -45,7 +46,7 @@ def start_pairing():
     device_name = data.get('name')
     description = data.get('description', '')  # Optional
     room_id = data.get('room_id')
-    gateway_id = request.headers.get('X-Gateway-ID')
+    gateway_id = request.gateway_id
 
     if not all([gateway_id, device_name, room_id]):
         return jsonify({"message": "Missing data"}), 400
@@ -118,8 +119,9 @@ def device_ping(device_id):
 
 #region simpleLED
 @devices_bp.route('/devices/simpleled/<int:device_id>/state', methods=['PUT'])
+@token_required
 def update_device_state(device_id):
-    gateway_id = request.headers.get('X-Gateway-ID')
+    gateway_id = request.gateway_id
     if not gateway_id:
         return jsonify({'error': 'Unauthorized'}), 401
     
@@ -158,8 +160,9 @@ def get_device_state(device_id):
 
 #region alarmSensor
 @devices_bp.route('/devices/alarmsensor/<int:device_id>/alarm_enabled', methods=['PUT'])
+@token_required
 def update_is_alarm_enabled(device_id):
-    gateway_id = request.headers.get('X-Gateway-ID')
+    gateway_id = request.gateway_id
     if not gateway_id:
         return jsonify({'error': 'Unauthorized'}), 401
     
@@ -235,8 +238,9 @@ def get_rgb_strip_properties(device_id):
     return jsonify({'properties': device.properties or {}}), 200
 
 @devices_bp.route('/devices/rgbstrip/<int:device_id>/state', methods = ['PUT'])
+@token_required
 def update_rgb_strip_state(device_id):
-    gateway_id = request.headers.get('X-Gateway-ID')
+    gateway_id = request.gateway_id
     if not gateway_id:
         return jsonify({'error': 'Unauthorized'}), 401
     
@@ -264,8 +268,9 @@ def update_rgb_strip_state(device_id):
     return jsonify({'message': 'Device state updated successfully'}), 200
 
 @devices_bp.route('/devices/rgbstrip/<int:device_id>/color', methods = ['PUT'])
+@token_required
 def update_rgb_strip_color(device_id):
-    gateway_id = request.headers.get('X-Gateway-ID')
+    gateway_id = request.gateway_id
     if not gateway_id:
         return jsonify({'error': 'Unauthorized'}), 401
     
@@ -291,8 +296,9 @@ def update_rgb_strip_color(device_id):
     return jsonify({'message': 'Device state updated successfully'}), 200
 
 @devices_bp.route('/devices/rgbstrip/<int:device_id>/brightness', methods = ['PUT'])
+@token_required
 def update_rgb_strip_brightness(device_id):
-    gateway_id = request.headers.get('X-Gateway-ID')
+    gateway_id = request.gateway_id
     if not gateway_id:
         return jsonify({'error': 'Unauthorized'}), 401
     
@@ -327,8 +333,9 @@ def get_lcd_display_properties(device_id):
     return jsonify({'properties': device.properties or {}}), 200
 
 @devices_bp.route('/devices/lcddisplay/<int:device_id>/state', methods = ['PUT'])
+@token_required
 def update_lcd_display_state(device_id):
-    gateway_id = request.headers.get('X-Gateway-ID')
+    gateway_id = request.gateway_id
     if not gateway_id:
         return jsonify({'error': 'Unauthorized'}), 401
     
@@ -350,8 +357,9 @@ def update_lcd_display_state(device_id):
     return jsonify({'message': 'Device state updated successfully'}), 200
 
 @devices_bp.route('/devices/lcddisplay/<int:device_id>/text', methods = ['PUT'])
+@token_required
 def update_lcd_display_text(device_id):
-    gateway_id = request.headers.get('X-Gateway-ID')
+    gateway_id = request.gateway_id
     if not gateway_id:
         return jsonify({'error': 'Unauthorized'}), 401
     
@@ -376,8 +384,9 @@ def update_lcd_display_text(device_id):
     return jsonify({'message': 'Device state updated successfully'}), 200
 
 @devices_bp.route('/devices/lcddisplay/<int:device_id>/theme', methods = ['PUT'])
+@token_required
 def update_lcd_display_theme(device_id):
-    gateway_id = request.headers.get('X-Gateway-ID')
+    gateway_id = request.gateway_id
     if not gateway_id:
         return jsonify({'error': 'Unauthorized'}), 401
     
