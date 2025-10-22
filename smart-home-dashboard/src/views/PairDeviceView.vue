@@ -18,39 +18,50 @@ let timerInterval = null
 
 const startPairing = async () => {
   if (!name.value || !roomId.value) return
-
+ 
   isPairing.value = true
   statusMessage.value = ''
   progress.value = 0
-
-  // Simulate progress
+ 
+  const gatewayId = localStorage.getItem('gatewayId')
+ 
+  try {
+    await axios.post('http://localhost:8000/api/start-pairing', {
+      name: name.value,
+      room_id: roomId.value,
+      description: description.value,
+    })
+  } catch (err) {
+    statusMessage.value = "Could not start pairing."
+    isPairing.value = false
+    return
+  }
+ 
   let secondsElapsed = 0
   timerInterval = setInterval(() => {
     secondsElapsed++
     progress.value = Math.min((secondsElapsed / pairingDuration) * 100, 100)
     if (secondsElapsed >= pairingDuration) clearInterval(timerInterval)
   }, 1000)
-
-  try {
-    const res = await axios.post('http://localhost:8000/api/start-pairing', {
-      name: name.value,
-      room_id: roomId.value,
-      description: description.value,
-      type: 'generic'
-    })
-
-    statusMessage.value = res.data.message || 'Device successfully paired!'
-  } catch (error) {
-    if (error.response?.status === 408) {
-      statusMessage.value = 'Pairing timed out. Please try again.'
-    } else {
-      statusMessage.value = 'Error pairing device.'
+ 
+  const pollInterval = setInterval(async () => {
+    const res = await axios.get('http://localhost:8000/api/pairing-status')
+    const status = res.data.status
+ 
+    if (status === 'paired') {
+      clearInterval(pollInterval)
+      clearInterval(timerInterval)
+      statusMessage.value = 'Device paired successfully!'
+      progress.value = 100
+      isPairing.value = false
+    } else if (status === 'timeout') {
+      clearInterval(pollInterval)
+      clearInterval(timerInterval)
+      statusMessage.value = 'Pairing timed out.'
+      progress.value = 100
+      isPairing.value = false
     }
-  } finally {
-    clearInterval(timerInterval)
-    isPairing.value = false
-    progress.value = 100
-  }
+  }, 3000)
 }
 
 onMounted(() => {
@@ -93,7 +104,7 @@ onMounted(() => {
             required
           >
             <option disabled value="" class="text-muted-foreground">-- Select a room --</option>
-            <option v-for="room in rooms" :key="room.id" :value="room.id" class="text-foreground">
+            <option v-for="room in roomStore.rooms" :key="room.id" :value="room.id" class="text-foreground">
               {{ room.name }}
             </option>
           </select>

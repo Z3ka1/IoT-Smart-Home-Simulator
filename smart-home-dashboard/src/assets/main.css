@@ -27,19 +27,46 @@
     --warning: 38 92% 50%;
     --radius: 0.75rem;
   }
-
-  :light {
-    --background: 0 0% 98%;
-    /* TODO */
+ 
+  .light {
+    --background: 0 0% 80%;
+    --foreground: 0 0% 20%;
+    --card: 0 0% 98%;
+    --card-foreground: 0 0% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
+    --primary: 280 49% 34%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 85%;
+    --secondary-foreground: 0 0% 10%;
+    --muted: 0 0% 95%;
+    --muted-foreground: 0 0% 40%;
+    --accent: 0 0% 95%;
+    --accent-foreground: 0 0% 10%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 217 91% 60%;
+    --success: 142 76% 36%;
+    --warning: 38 92% 50%;
+    --radius: 0.75rem;
   }
 }
 
 @layer base {
   * {
-    /* Fixed border-border to use proper border-border class */
     @apply border-border/20;
   }
   body {
     @apply bg-background text-foreground font-sans;
   }
+}
+
+html {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+ 
+body, .card, .bg-background, .bg-card {
+  transition: background-color 0.3s ease, color 0.3s ease;
 }

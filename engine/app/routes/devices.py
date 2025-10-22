@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request
 from app.models.device import Device
 from app.models.gateway import Gateway
 from app import db
-from threading import Event
+from threading import Timer
 from datetime import datetime, timedelta
 import time
 import sys
@@ -37,58 +37,68 @@ def get_devices():
 # Temporary in-memory storage for pending pairings
 pending_pairing = None  # holds a dict or None
 
+PAIRING_TIMEOUT = 60
+ 
+def reset_pairing():
+    global pending_pairing
+    pending_pairing = None
+ 
 @devices_bp.route('/start-pairing', methods=['POST'])
 @token_required
 def start_pairing():
     global pending_pairing
     data = request.get_json()
-
+ 
     device_name = data.get('name')
     description = data.get('description', '')  # Optional
     room_id = data.get('room_id')
     gateway_id = request.gateway_id
 
-    if not all([gateway_id, device_name, room_id]):
+    if not gateway_id:
+        return jsonify({'error': 'Unauthorized'}), 401
+ 
+    if not all([device_name, room_id]):
         return jsonify({"message": "Missing data"}), 400
-
-    if pending_pairing is not None:
+ 
+    if pending_pairing is not None and pending_pairing['status'] == 'pending':
         return jsonify({"message": "Another pairing is already in progress"}), 409
-
-    pairing_event = Event()
+    
+    created_at = time.time()
     pending_pairing = {
         "name": device_name,
         "description": description,
         "room_id": room_id,
         "gateway_id": gateway_id,
-        "event": pairing_event,
-        "type": None,
-        "properties": None
+        "status": "pending",
+        "device_type": 'generic',
+        "properties": None,
+        "device_id": None,
+        "created_at": created_at
     }
-
-    # If time changes, also change PairDeviceView.vue/pairingDuration
-    paired = pairing_event.wait(timeout=60)
-
-    if paired:
-        return jsonify({"message": "Device paired successfully"}), 200
-    else:
-        pending_pairing = None
-        return jsonify({"message": "Pairing timed out"}), 408
-
-
+ 
+    def expire():
+        if pending_pairing and pending_pairing['status'] == 'pending':
+            pending_pairing['status'] = 'timeout'
+ 
+    Timer(PAIRING_TIMEOUT, expire).start()
+ 
+    return jsonify({"message": "Pairing started", "timeout": PAIRING_TIMEOUT}), 200
+ 
+ 
 @devices_bp.route('/pair-device', methods=['POST'])
 def pair_device():
     global pending_pairing
-    if pending_pairing is None:
-        return jsonify({"message": "No pending pairing found"}), 404
-
+    if pending_pairing is None or pending_pairing['status'] != 'pending':
+        return jsonify({"message": "No active pairing session"}), 404
+ 
     data = request.get_json()
     device_type = data.get('type')
     properties = data.get('properties', {})
-
+ 
     # Complete pairing info
     pending_pairing["type"] = device_type
     pending_pairing["properties"] = properties
-
+ 
     new_device = Device(
         name=pending_pairing["name"],
         type=device_type,
@@ -99,11 +109,23 @@ def pair_device():
     )
     db.session.add(new_device)
     db.session.commit()
-
-    pending_pairing["event"].set()
-    pending_pairing = None
-
-    return jsonify({"message": "Device successfully registered", "device_id": new_device.id}), 201
+ 
+    pending_pairing.update({
+        "status": "paired",
+        "device_type": device_type,
+        "properties": properties,
+        "device_id": new_device.id
+    })
+ 
+    return jsonify({"message": "Device successfully paired", "device_id": new_device.id}), 201
+ 
+@devices_bp.route('/pairing-status', methods=['GET'])
+def pairing_status():
+    global pending_pairing
+    if pending_pairing is None:
+        return jsonify({"status": "idle"}), 200
+    
+    return jsonify({"status": pending_pairing["status"], "device_id": pending_pairing.get("device_id")}), 200
 
 
 # Route for any device to ping server in order to keep its frontend widget alive

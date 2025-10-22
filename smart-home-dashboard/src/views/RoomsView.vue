@@ -69,7 +69,7 @@ const removeRoom = async (roomId) => {
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <div v-for="room in roomStore.rooms" :key="room.id" class="bg-card border border-border rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200 group relative">
         <button
-          class="absolute top-4 right-4 w-8 h-8 bg-destructive/10 hover:bg-destructive/20 text-destructive rounded-lg flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"
+          class="absolute top-4 right-4 w-8 h-8 bg-destructive text-destructive-foreground hover:bg-destructive/80 rounded-lg flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100" 
           @click="removeRoom(room.id)"
         >
           <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">

@@ -13,5 +13,9 @@ app.use(createPinia())
 const auth = useAuthStore()
 auth.initialize()
 
+import {useThemeStore} from '@/stores/themeStore'
+const themeStore = useThemeStore()
+themeStore.initTheme()
+
 app.use(router)
 app.mount('#app')
