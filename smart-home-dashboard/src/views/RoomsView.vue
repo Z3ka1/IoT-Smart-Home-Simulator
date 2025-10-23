@@ -8,6 +8,12 @@ import axios from '../utils/axios'
 const roomStore = useRoomStore()
 const authStore = useAuthStore()
 let popupIsActive = ref(false)
+const confirmDeletePopup = ref(false)
+const selectedRoom = ref(null)
+const devicesInRoom = ref([])
+
+const errorPopup = ref(false)
+const errorMessage = ref('') 
 
 console.log(roomStore.rooms)
 
@@ -27,20 +33,42 @@ const addNewRoom = async () => {
       }
     } catch (error) {
         console.error('Error adding room:', error);
-        alert('Error adding room')
+
+        if (error.response && error.response.data && error.response.data.error) {
+          errorMessage.value = error.response.data.error
+        } else {
+          errorMessage.value = "An unexpected error occured while adding the room."
+        }
+        errorPopup.value = true
     }
 }
-
-const removeRoom = async (roomId) => {
-  console.log(roomId)
+ 
+// Trigger delete confirmation popup
+const askDeleteRoom = async (room) => {
+  selectedRoom.value = room
+  devicesInRoom.value = []
+ 
   try {
-    const response = await axios.delete(`http://localhost:8000/api/rooms/remove/${roomId}`)
-    if (response.status === 200) {
-      roomStore.removeRoom(roomId)
-    }
+    const res = await axios.get(`http://localhost:8000/api/rooms/${room.id}/devices`)
+    devicesInRoom.value = res.data.devices || []
+  } catch (e) {
+    console.error('Could not fetch devices in room', e)
   }
-  catch (error) {
-    console.error('Error removing room: ', error);
+ 
+  confirmDeletePopup.value = true
+}
+ 
+// Actual deletion after confirmation
+const confirmDeleteRoom = async () => {
+  try {
+    const response = await axios.delete(`http://localhost:8000/api/rooms/remove/${selectedRoom.value.id}`)
+    if (response.status === 200) {
+      roomStore.removeRoom(selectedRoom.value.id)
+      confirmDeletePopup.value = false
+      selectedRoom.value = null
+    }
+  } catch (error) {
+    console.error('Error removing room: ', error)
     alert('Error removing room')
   }
 }
@@ -69,8 +97,8 @@ const removeRoom = async (roomId) => {
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <div v-for="room in roomStore.rooms" :key="room.id" class="bg-card border border-border rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200 group relative">
         <button
-          class="absolute top-4 right-4 w-8 h-8 bg-destructive text-destructive-foreground hover:bg-destructive/80 rounded-lg flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100" 
-          @click="removeRoom(room.id)"
+          class="absolute top-4 right-4 w-8 h-8 bg-destructive text-destructive-foreground hover:bg-destructive/80 rounded-lg flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"
+          @click="askDeleteRoom(room)"
         >
           <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
@@ -108,6 +136,7 @@ const removeRoom = async (roomId) => {
           <input
             type="text"
             id="roomName"
+            maxlength="24"
             v-model="newRoomName"
             placeholder="Enter room name"
             class="w-full bg-background border border-border rounded-lg px-4 py-3 text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
@@ -130,5 +159,56 @@ const removeRoom = async (roomId) => {
         </div>
       </div>
     </PopupWindow>
+ 
+    <!-- Confirm Delete Popup -->
+    <PopupWindow @closePopup="confirmDeletePopup = false" v-if="confirmDeletePopup">
+      <div class="space-y-6">
+        <h3 class="text-lg font-semibold text-foreground">
+          Delete Room "{{ selectedRoom?.name }}"?
+        </h3>
+        <p class="text-muted-foreground text-sm">
+          This action will permanently delete the room and all devices inside it.
+        </p>
+ 
+        <div v-if="devicesInRoom.length" class="border border-border rounded-lg p-4 space-y-2 max-h-48 overflow-y-auto">
+          <h4 class="font-medium text-foreground mb-1 text-sm">Devices to be deleted:</h4>
+          <ul class="list-disc list-inside text-sm text-muted-foreground space-y-1">
+            <li v-for="device in devicesInRoom" :key="device.id">{{ device.name }} ({{ device.type }})</li>
+          </ul>
+        </div>
+        <p v-else class="text-sm text-muted-foreground italic">No devices in this room.</p>
+ 
+        <div class="flex justify-end space-x-3">
+          <button @click="confirmDeletePopup = false" class="px-4 py-2 text-muted-foreground hover:text-foreground transition-colors">
+            Cancel
+          </button>
+          <button
+            @click="confirmDeleteRoom"
+            class="bg-destructive text-destructive-foreground px-6 py-2 rounded-lg font-medium hover:bg-destructive/90 transition-colors"
+          >
+            Delete Room
+          </button>
+        </div>
+      </div>
+    </PopupWindow>
+ 
+    <!-- Error Popup -->
+    <PopupWindow v-if="errorPopup" @closePopup="errorPopup = false">
+      <div class="space-y-4">
+        <h3 class="text-lg font-semibold text-destructive">Error</h3>
+        <p class="text-muted-foreground">{{ errorMessage }}</p>
+ 
+        <div class="flex justify-end">
+          <button
+            @click="errorPopup = false"
+            class="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors"
+          >
+            OK
+          </button>
+        </div>
+      </div>
+    </PopupWindow>
+ 
+ 
   </div>
 </template>

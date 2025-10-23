@@ -10,10 +10,10 @@ class Device(db.Model):
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.String(200))
     type = db.Column(db.String(50), nullable=False)
-    room_id = db.Column(db.Integer, db.ForeignKey('rooms.id'), nullable=False)
+    room_id = db.Column(db.Integer, db.ForeignKey('rooms.id', ondelete = 'CASCADE'), nullable=False)
     gateway_id = db.Column(db.Integer, db.ForeignKey('gateways.id'), nullable=False)
     last_seen = db.Column(db.DateTime, default=datetime.utcnow)
     available = db.Column(db.Boolean, default=False)
     properties = db.Column(MutableDict.as_mutable(JSONB))
 
-    room = db.relationship('Room', backref=db.backref('devices', lazy=True))
+    room = db.relationship('Room', back_populates = 'devices')

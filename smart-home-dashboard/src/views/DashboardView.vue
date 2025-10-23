@@ -5,10 +5,14 @@ import GenericDeviceWidget from '@/components/devices/GenericDeviceWidget.vue'
 import DashboardNavbar from '@/components/DashboardNavbar.vue'
 import { deviceWidgetMap } from '@/utils/deviceWidgetMap'
 import socket from '@/services/websocket'
+import { useRoomStore } from '@/stores/roomStore'
 
 const selectedRoomId = ref(null)
 const deviceStore = useDeviceStore();
 const { fetchDevices } = useDeviceStore();
+const roomStore = useRoomStore()
+
+const noRooms = computed (() => roomStore.rooms.length === 0)
 
 const socketHandlers = {
   device_status: null,
@@ -79,7 +83,7 @@ onUnmounted(() => {
 const handleRoomSelected = (roomId) => {
   selectedRoomId.value = roomId;
 };
-
+ 
 const devicesInSelectedRoom = computed(() => {
   return deviceStore.devices.filter(d => d.roomId === selectedRoomId.value)
 });
@@ -117,12 +121,37 @@ watch(selectedRoomId, () => {
     <!-- Empty state when no devices -->
     <div v-if="devicesInSelectedRoom.length === 0 && selectedRoomId" class="text-center py-12">
       <div class="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-        <svg class="w-8 h-8 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.467.881-6.127 2.325.895-.449 1.933-.725 3.127-.725 1.194 0 2.232.276 3.127.725z"/>
+        <svg class="w-10 h-10 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M6 18L18 6M6 6l12 12" />
         </svg>
       </div>
       <h3 class="text-lg font-medium text-foreground mb-2">No devices found</h3>
       <p class="text-muted-foreground">This room doesn't have any devices yet.</p>
     </div>
+ 
+    <!-- Empty state when no rooms exist -->
+    <div v-if="noRooms" class="text-center py-20">
+      <div class="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
+        <svg class="w-10 h-10 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </div>
+      <h3 class="text-xl font-semibold text-foreground mb-2">No rooms found</h3>
+      <p class="text-muted-foreground mb-6">
+        You haven't created any rooms yet. Add a room to start managing your smart devices.
+      </p>
+      <RouterLink
+        to="/rooms"
+        class="bg-primary text-primary-foreground px-6 py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors inline-flex items-center gap-2"
+      >
+        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/>
+        </svg>
+        Add Room
+      </RouterLink>
+    </div>
+ 
   </div>
 </template>

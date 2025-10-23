@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 from app.models.room import Room
 from app.models.gateway import Gateway
+from app.models.device import Device
 from app import db
 from ..utils.jwt_utils import token_required
 
@@ -23,6 +24,15 @@ def get_rooms():
 def add_room():
     data = request.get_json()
     gateway_id = request.gateway_id
+ 
+    room_name = data.get('name', '').strip()
+    if not room_name:
+        return jsonify({"error": "Room name is required"}), 400
+    
+    existing_room = Room.query.filter_by(name = room_name, gateway_id = gateway_id).first()
+    if existing_room:
+        return jsonify({"error": f"Room '{room_name}' already exists."}), 400
+
     new_room = Room(name=data['name'], gateway_id = gateway_id)
     db.session.add(new_room)
     db.session.commit()
@@ -38,3 +48,15 @@ def delete_room(room_id):
     db.session.delete(room)
     db.session.commit()
     return jsonify({'message': 'Room deleted successfully'}), 200
+
+@rooms_bp.route('/rooms/<room_id>/devices', methods=['GET'])
+@token_required
+def get_devices_in_room(room_id):
+    gateway_id = request.gateway_id
+    devices = Device.query.filter_by(room_id=room_id, gateway_id=gateway_id).all()
+    return jsonify({
+        "devices": [
+            {"id": d.id, "name": d.name, "type": d.type}
+            for d in devices
+        ]
+    }), 200
