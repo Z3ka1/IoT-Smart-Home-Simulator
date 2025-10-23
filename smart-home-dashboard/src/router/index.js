@@ -5,6 +5,7 @@ import RoomsView from '@/views/RoomsView.vue'
 import Login from '@/views/Login.vue'
 import Register from '@/views/Register.vue'
 import PairDeviceView from '@/views/PairDeviceView.vue'
+import DeviceListView from '@/views/DeviceListView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -35,6 +36,12 @@ const router = createRouter({
       path: '/pair',
       name: 'Pair',
       component: PairDeviceView
+    },
+    {
+      path: '/devices',
+      name: 'Devices',
+      component: DeviceListView,
+      meta: {requiresAuth: true}
     }
   ],
 })

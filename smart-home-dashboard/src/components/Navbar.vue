@@ -46,7 +46,7 @@ const handleLogout = () => {
     <ul class="md:flex space-x-1 hidden items-center">
       <template v-if="auth.loggedIn">
         <li><router-link to="/" class="px-4 py-2 rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors">Dashboard</router-link></li>
-        <li><router-link to="/deviceList" class="px-4 py-2 rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors">Device List</router-link></li>
+        <li><router-link to="/devices" class="px-4 py-2 rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors">Devices</router-link></li>
         <li><router-link to="/pair" class="px-4 py-2 rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors">Pair Device</router-link></li>
         <li><router-link to="/rooms" class="px-4 py-2 rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors">Rooms</router-link></li>
         <li><button @click="handleLogout" class="px-4 py-2 rounded-lg hover:bg-destructive hover:text-destructive-foreground transition-colors">Logout</button></li>
@@ -71,7 +71,7 @@ const handleLogout = () => {
     >
       <template v-if="auth.loggedIn">
         <li><router-link to="/" @click="isOpen = false" class="px-4 py-2 rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors">Dashboard</router-link></li>
-        <li><router-link to="/deviceList" @click="isOpen = false" class="px-4 py-2 rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors">Device List</router-link></li>
+        <li><router-link to="/devices" @click="isOpen = false" class="px-4 py-2 rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors">Devices</router-link></li>
         <li><router-link to="/pair" @click="isOpen = false" class="px-4 py-2 rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors">Pair Device</router-link></li>
         <li><router-link to="/rooms" @click="isOpen = false" class="px-4 py-2 rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors">Rooms</router-link></li>
         <li><button @click="handleLogout(); isOpen = false" class="px-4 py-2 rounded-lg hover:bg-destructive hover:text-destructive-foreground transition-colors">Logout</button></li>

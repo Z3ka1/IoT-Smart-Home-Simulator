@@ -139,6 +139,19 @@ def device_ping(device_id):
     db.session.commit()
     return jsonify({'status': 'ok'}), 200
 
+@devices_bp.route('/devices/remove/<int:device_id>', methods=['DELETE'])
+@token_required
+def delete_device(device_id):
+    gateway_id = request.gateway_id
+    
+    device = Device.query.filter_by(id=device_id, gateway_id=gateway_id).first()
+    if not device:
+        return jsonify({'error': 'Device not found'}), 404
+    
+    db.session.delete(device)
+    db.session.commit()
+    return jsonify({'message': 'Device deleted successfully'}), 200
+
 #region simpleLED
 @devices_bp.route('/devices/simpleled/<int:device_id>/state', methods=['PUT'])
 @token_required
