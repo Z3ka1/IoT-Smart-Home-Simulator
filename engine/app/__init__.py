@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 import sys
 import requests
 import os
+from .emits import emits_bp
 
 db = SQLAlchemy()
 socketio = SocketIO(cors_allowed_origins = "*")#, logger = True, engineio_logger = True)
@@ -94,6 +95,7 @@ def create_app():
     app.register_blueprint(rooms_bp, url_prefix='/api')
     app.register_blueprint(devices_bp, url_prefix='/api')
     app.register_blueprint(gateways_bp, url_prefix='/api')
+    app.register_blueprint(emits_bp)
 
     with app.app_context():
         db.create_all()

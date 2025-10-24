@@ -2,6 +2,7 @@
 import { ref, watch, onMounted } from 'vue'
 import axios from '../../utils/axios'
 import debounce from 'lodash/debounce'
+import { truncateText, truncateDescription } from '@/utils/stringUtils'
 
 const props = defineProps({ device: Object })
 
@@ -9,6 +10,9 @@ const isEnabled = ref(false) // is_alarm_enabled
 const motionDetected = ref(false) // motion_detected
 const ignoreNextUpdate = ref(false)
 const isAvailable = ref(true)
+
+const displayDeviceName = truncateText(props.device.name, 17, 'Alarm Sensor')
+const displayDeviceDescription = truncateDescription(props.device.description, 17, 'Motion Alarm')
 
 onMounted(() => {
   isEnabled.value = props.device.properties?.is_alarm_enabled
@@ -67,9 +71,9 @@ watch(isEnabled, (newValue, oldValue) => {
             <path d="M12 2a9 9 0 00-9 9v5H2v2h20v-2h-1v-5a9 9 0 00-9-9zm0 2a7 7 0 017 7v5H5v-5a7 7 0 017-7zm-1 10h2v2h-2v-2zm0-6h2v4h-2V8z"/>
           </svg>
         </div>
-        <div>
-          <h3 class="font-semibold text-foreground">{{ device.name || 'Alarm' }}</h3>
-          <p class="text-sm text-muted-foreground">Motion Alarm</p>
+        <div class="min-w-0 flex-1">
+          <h3 class="font-semibold text-foreground truncate" :title = "device.name">{{ displayDeviceName }}</h3>
+          <p class="text-sm text-muted-foreground truncate">{{ displayDeviceDescription }}</p>
         </div>
       </div>
 

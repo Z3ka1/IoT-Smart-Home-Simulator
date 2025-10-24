@@ -178,6 +178,18 @@ def update_device_state(device_id):
     device.properties = properties
     db.session.commit()
 
+    try:
+        response = requests.post(
+            f'http://localhost:8000/emit-simpleled_state',
+            json={
+                'id': device.id,
+                'state': properties['state']
+            }
+        )
+        print(f"Emission status: {response.status_code}, Response: {response.json()}")
+    except Exception as e:
+        print(f"Failed to trigger emission: {str(e)}")
+ 
     #print(f"props: {properties}", file = sys.stdout)
     #print(f"props: {device.properties}", file = sys.stdout)
     return jsonify({'message': 'Device state updated successfully', 'properties': properties}), 200
@@ -214,6 +226,18 @@ def update_is_alarm_enabled(device_id):
 
     device.properties = properties
     db.session.commit()
+
+    try:
+        response = requests.post(
+            f'http://localhost:8000/emit-alarmsensor_enabled',
+            json={
+                'id': device.id,
+                'is_alarm_enabled': properties['is_alarm_enabled']
+            }
+        )
+        print(f"Emission status: {response.status_code}, Response: {response.json()}")
+    except Exception as e:
+        print(f"Failed to trigger emission: {str(e)}")
 
     #print(f"props: {properties}", file = sys.stdout)
     #print(f"props: {device.properties}", file = sys.stdout)
@@ -298,6 +322,18 @@ def update_rgb_strip_state(device_id):
     device.properties = properties
     db.session.commit()
 
+    try:
+        response = requests.post(
+            f'http://localhost:8000/emit-rgbstrip_state',
+            json={
+                'id': device.id,
+                'state': properties['state']
+            }
+        )
+        print(f"Emission status: {response.status_code}, Response: {response.json()}")
+    except Exception as e:
+        print(f"Failed to trigger emission: {str(e)}")
+
     #print(f"props: {properties}", file = sys.stdout)
     #print(f"props: {device.properties}", file = sys.stdout)
     return jsonify({'message': 'Device state updated successfully'}), 200
@@ -326,6 +362,20 @@ def update_rgb_strip_color(device_id):
     device.properties = properties
     db.session.commit()
 
+    try:
+        response = requests.post(
+            f'http://localhost:8000/emit-rgbstrip_color',
+            json={
+                'id': device.id,
+                'red': properties['red'],
+                'green': properties['green'],
+                'blue': properties['blue']
+            }
+        )
+        print(f"Emission status: {response.status_code}, Response: {response.json()}")
+    except Exception as e:
+        print(f"Failed to trigger emission: {str(e)}")
+
     #print(f"props: {properties}", file = sys.stdout)
     #print(f"props: {device.properties}", file = sys.stdout)
     return jsonify({'message': 'Device state updated successfully'}), 200
@@ -351,6 +401,18 @@ def update_rgb_strip_brightness(device_id):
 
     device.properties = properties
     db.session.commit()
+
+    try:
+        response = requests.post(
+            f'http://localhost:8000/emit-rgbstrip_brightness',
+            json={
+                'id': device.id,
+                'brightness': properties['brightness']
+            }
+        )
+        print(f"Emission status: {response.status_code}, Response: {response.json()}")
+    except Exception as e:
+        print(f"Failed to trigger emission: {str(e)}")
 
     return jsonify({'message': 'Device state updated successfully'}), 200
 
@@ -383,11 +445,27 @@ def update_lcd_display_state(device_id):
     if 'state' not in data:
         return jsonify({'error': 'Missing "state" field in request'}), 400    
     
+    if data['state'] == True:
+        state = "on"
+    else:
+        state = "off"
     properties = device.properties or {}
-    properties['state'] = data['state']
+    properties['state'] = state
 
     device.properties = properties
     db.session.commit()
+
+    try:
+        response = requests.post(
+            f'http://localhost:8000/emit-lcddisplay_state',
+            json={
+                'id': device.id,
+                'state': properties['state']
+            }
+        )
+        print(f"Emission status: {response.status_code}, Response: {response.json()}")
+    except Exception as e:
+        print(f"Failed to trigger emission: {str(e)}")
 
     return jsonify({'message': 'Device state updated successfully'}), 200
 
@@ -416,6 +494,19 @@ def update_lcd_display_text(device_id):
     device.properties = properties
     db.session.commit()
 
+    try:
+        response = requests.post(
+            f'http://localhost:8000/emit-lcddisplay_text',
+            json={
+                'id': device.id,
+                'first_line_text': properties['first_line_text'],
+                'second_line_text': properties['second_line_text']
+            }
+        )
+        print(f"Emission status: {response.status_code}, Response: {response.json()}")
+    except Exception as e:
+        print(f"Failed to trigger emission: {str(e)}")
+
     return jsonify({'message': 'Device state updated successfully'}), 200
 
 @devices_bp.route('/devices/lcddisplay/<int:device_id>/theme', methods = ['PUT'])
@@ -439,6 +530,18 @@ def update_lcd_display_theme(device_id):
 
     device.properties = properties
     db.session.commit()
+
+    try:
+        response = requests.post(
+            f'http://localhost:8000/emit-lcddisplay_theme',
+            json={
+                'id': device.id,
+                'display_theme': properties['display_theme']
+            }
+        )
+        print(f"Emission status: {response.status_code}, Response: {response.json()}")
+    except Exception as e:
+        print(f"Failed to trigger emission: {str(e)}")
 
     return jsonify({'message': 'Device state updated successfully'}), 200
 

@@ -18,6 +18,14 @@ const socketHandlers = {
   device_status: null,
   motion_detected: null,
   weather_station_measurements: null,
+  simpleled_state: null,
+  lcddisplay_state: null,
+  lcddisplay_text: null,
+  lcddisplay_theme: null,
+  rgbstrip_state: null,
+  rgbstrip_color: null,
+  rgbstrip_brightness: null,
+  alarmsensor_enabled: null,
   test_pong: null
 }
 
@@ -56,16 +64,118 @@ const handleWeatherStationMeasurementsUpdate = (data) => {
   }
 }
 
+const handleSimpleLedStateUpdate = (data) => {
+  console.log('[INFO] Received simpleled state: ', data)
+  const device = deviceStore.devices.find(d => d.id === data.id)
+  if (device) {
+    if(device.type.toLowerCase() === 'simpleled' || (Object.prototype.hasOwnProperty.call(device.properties, 'state'))) {
+      device.properties.state = data.state
+    }
+  }
+}
+
+const handleLcdDisplayStateUpdate = (data) => {
+  console.log('[INFO] Received lcddisplay state: ', data)
+  const device = deviceStore.devices.find(d => d.id === data.id)
+  if (device) {
+    if(device.type.toLowerCase() === 'lcddisplay' || (Object.prototype.hasOwnProperty.call(device.properties, 'state')
+      && Object.prototype.hasOwnProperty.call(device.properties, 'second_line_text'))) {
+      device.properties.state = data.state
+    }
+  }
+}
+
+const handleLcdDisplayTextUpdate = (data) => {
+  console.log('[INFO] Received lcddisplay text: ', data)
+  const device = deviceStore.devices.find(d => d.id === data.id)
+  if (device) {
+    if(device.type.toLowerCase() === 'lcddisplay' || (Object.prototype.hasOwnProperty.call(device.properties, 'first_line_text')
+      && Object.prototype.hasOwnProperty.call(device.properties, 'second_line_text'))) {
+      device.properties.first_line_text = data.first_line_text
+      device.properties.second_line_text = data.second_line_text
+    }
+  }
+}
+
+const handleLcdDisplayThemeUpdate = (data) => {
+  console.log('[INFO] Received lcddisplay theme: ', data)
+  const device = deviceStore.devices.find(d => d.id === data.id)
+  if (device) {
+    if(device.type.toLowerCase() === 'lcddisplay' || (Object.prototype.hasOwnProperty.call(device.properties, 'display_theme'))) {
+      device.properties.display_theme = data.display_theme
+    }
+  }
+}
+
+const handleRgbStripStateUpdate = (data) => {
+  console.log('[INFO] Received rgbstrip state: ', data)
+  const device = deviceStore.devices.find(d => d.id === data.id)
+  if (device) {
+    if (device.type.toLowerCase() === 'rgbstrip' || (Object.prototype.hasOwnProperty.call(device.propertis, 'state'))) {
+      device.properties.state = data.state
+    }
+  }
+}
+
+const handleRgbStripColorUpdate = (data) => {
+  console.log('[INFO] Received rgbstrip color: ', data)
+  const device = deviceStore.devices.find(d => d.id === data.id)
+  if (device) {
+    if (device.type.toLowerCase() === 'rgbstrip' || (Object.prototype.hasOwnProperty.call(device.propertis, 'red')
+      && Object.prototype.hasOwnProperty.call(device.properties, 'green') && Object.prototype.hasOwnProperty.call(device.properties, 'blue'))) {
+      device.properties.red = data.red
+      device.properties.green = data.green
+      device.properties.blue = data.blue
+    }
+  }
+}
+
+const handleRgbStripBrightnessUpdate = (data) => {
+  console.log('[INFO] Received rgbstrip brightness: ', data)
+  const device = deviceStore.devices.find(d => d.id === data.id)
+  if (device) {
+    if (device.type.toLowerCase() === 'rgbstrip' || (Object.prototype.hasOwnProperty.call(device.propertis, 'brightness'))) {
+      device.properties.brightness = data.brightness
+    }
+  }
+}
+
+const handleAlarmSensorEnabledUpdate = (data) => {
+  console.log('[INFO] Received alarmsensor is_enabled: ', data)
+  const device = deviceStore.devices.find(d => d.id === data.id)
+  if (device) {
+    if (device.type.toLowerCase() === 'alarmsensor' || (Object.prototype.hasOwnProperty.call(device.properties, 'is_alarm_enabled'))) {
+      device.properties.is_alarm_enabled = data.is_alarm_enabled
+    }
+  }
+}
+
 onMounted(() => {
   fetchDevices();
   
   socketHandlers.device_status = handleSocketUpdate
   socketHandlers.motion_detected = handleMotionDetectedUpdate
   socketHandlers.weather_station_measurements = handleWeatherStationMeasurementsUpdate
+  socketHandlers.simpleled_state = handleSimpleLedStateUpdate
+  socketHandlers.lcddisplay_state = handleLcdDisplayStateUpdate
+  socketHandlers.lcddisplay_text = handleLcdDisplayTextUpdate
+  socketHandlers.lcddisplay_theme = handleLcdDisplayThemeUpdate
+  socketHandlers.rgbstrip_state = handleRgbStripStateUpdate
+  socketHandlers.rgbstrip_color = handleRgbStripColorUpdate
+  socketHandlers.rgbstrip_brightness = handleRgbStripBrightnessUpdate
+  socketHandlers.alarmsensor_enabled = handleAlarmSensorEnabledUpdate
 
   socket.on('device_status', socketHandlers.device_status)
   socket.on('motion_detected', socketHandlers.motion_detected)
   socket.on('weather_station_measurements', socketHandlers.weather_station_measurements)
+  socket.on('simpleled_state', socketHandlers.simpleled_state)
+  socket.on('lcddisplay_state', socketHandlers.lcddisplay_state)
+  socket.on('lcddisplay_text', socketHandlers.lcddisplay_text)
+  socket.on('lcddisplay_theme', socketHandlers.lcddisplay_theme)
+  socket.on('rgbstrip_state', socketHandlers.rgbstrip_state)
+  socket.on('rgbstrip_color', socketHandlers.rgbstrip_color)
+  socket.on('rgbstrip_brightness', socketHandlers.rgbstrip_brightness)
+  socket.on('alarmsensor_enabled', socketHandlers.alarmsensor_enabled)
 
   socket.on('connect_error', (err) => {
     console.error("[ERROR] Connection error:", err)
@@ -76,6 +186,14 @@ onUnmounted(() => {
   if (socketHandlers.device_status) socket.off('device_status', socketHandlers.device_status)
   if (socketHandlers.motion_detected) socket.off('motion_detected', socketHandlers.motion_detected)
   if (socketHandlers.weather_station_measurements) socket.off('weather_station_measurements', socketHandlers.weather_station_measurements)
+  if (socketHandlers.simpleled_state) socket.off('simpleled_state', socketHandlers.simpleled_state)
+  if (socketHandlers.lcddisplay_state) socket.off('lcddisplay_state', socketHandlers.lcddisplay_state)
+  if (socketHandlers.lcddisplay_text) socket.off('lcddisplay_text', socketHandlers.lcddisplay_text)
+  if (socketHandlers.lcddisplay_theme) socket.off('lcddisplay_theme', socketHandlers.lcddisplay_theme)
+  if (socketHandlers.rgbstrip_state) socket.off('rgbstrip_state', socketHandlers.rgbstrip_state)
+  if (socketHandlers.rgbstrip_color) socket.off('rgbstrip_color', socketHandlers.rgbstrip_color)
+  if (socketHandlers.rgbstrip_brightness) socket.off('rgbstrip_brightness', socketHandlers.rgbstrip_brightness)
+  if (socketHandlers.alarmsensor_enabled) socket.off('alarmsensor_enabled', socketHandlers.alarmsensor_enabled)
 
   console.log('[INFO] Cleaned up all socket listeners')
 });

@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
+import { truncateText, truncateDescription } from '@/utils/stringUtils'
 
 const props = defineProps({ device: Object })
 
@@ -18,6 +19,9 @@ const apiPressure = ref(0)
 const apiHumidity = ref(0)
 const apiWeatherDescription = ref('')
 const city = ref('')
+
+const displayDeviceName = truncateText(props.device.name, 17, 'Weather Station')
+const displayDeviceDescription = truncateDescription(props.device.description, 17, 'Climate Monitor')
 
 onMounted(() => {
   isAvailable.value = props.device.available
@@ -87,8 +91,8 @@ const getWeatherIcon = (description) => {
             </svg>
           </div>
           <div>
-            <h3 class="font-semibold text-foreground">{{ device.name || 'Weather Station' }}</h3>
-            <p class="text-xs text-muted-foreground">{{ device.description || 'Climate Monitor' }}</p>
+            <h3 class="font-semibold text-foreground" :title = "device.name">{{ displayDeviceName }}</h3>
+            <p class="text-xs text-muted-foreground">{{ displayDeviceDescription }}</p>
           </div>
         </div>
         

@@ -68,7 +68,7 @@ def poll_properties():
             new_red = props.get("red")
             new_green = props.get("green")
             new_blue = props.get("blue")
-            new_brightness = props.get("brightness")
+            new_brightness = props.get("brightness")    # / 100 TODO
             new_state = props.get("state")
             
             if new_red != red or new_green != green or new_blue != blue or new_brightness != brightness or new_state != current_state:

@@ -2,12 +2,16 @@
 import { ref, watch, onMounted, watchEffect, onUnmounted } from 'vue'
 import axios from '../../utils/axios'
 import debounce from 'lodash/debounce'
+import { truncateText, truncateDescription } from '@/utils/stringUtils'
 
 const props = defineProps({ device: Object })
 
 const isOn = ref(false)
 const ignoreNextUpdate = ref(false)
 const isAvailable = ref(true)
+
+const displayDeviceName = truncateText(props.device.name, 17, 'LED Light')
+const displayDeviceDescription = truncateDescription(props.device.description, 17, 'Smart LED')
 
 onMounted(() => {
     isOn.value = props.device.properties?.state === 'on'
@@ -62,8 +66,8 @@ watch(() => props.device.available, (newVal) => {
           </svg>
         </div>
         <div>
-          <h3 class="font-semibold text-foreground">{{ device.name || 'LED Light' }}</h3>
-          <p class="text-sm text-muted-foreground">Smart LED</p>
+          <h3 class="font-semibold text-foreground" :title="device.name">{{ displayDeviceName }}</h3>
+          <p class="text-sm text-muted-foreground">{{ displayDeviceDescription }}</p>
         </div>
       </div>
       

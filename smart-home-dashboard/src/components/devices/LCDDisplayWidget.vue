@@ -2,6 +2,7 @@
 import { ref, watch, onMounted, computed } from 'vue'
 import axios from '../../utils/axios'
 import debounce from 'lodash/debounce'
+import { truncateText, truncateDescription } from '@/utils/stringUtils'
 
 const props = defineProps({ device: Object })
 
@@ -16,6 +17,9 @@ const ignoreNextUpdate = ref(false)
 const isAvailable = ref(true)
 const firstLineError = ref('')
 const secondLineError = ref('')
+
+const displayDeviceName = truncateText(props.device.name, 17, 'LCD Display')
+const displayDeviceDescription = truncateDescription(props.device.description, 17, '16x2 Display')
 
 const themes = {
   'purple-haze': { name: 'Purple Haze', rgb: [148, 0, 110], bg: [26, 0, 18] },
@@ -191,8 +195,8 @@ watch(secondLineInput, () => {
           </svg>
         </div>
         <div>
-          <h3 class="font-semibold text-foreground">{{ device.name || 'LCD Display' }}</h3>
-          <p class="text-sm text-muted-foreground">16x2 Display</p>
+          <h3 class="font-semibold text-foreground" :title = "device.name">{{ displayDeviceName }}</h3>
+          <p class="text-sm text-muted-foreground">{{ displayDeviceDescription }}</p>
         </div>
       </div>
       
