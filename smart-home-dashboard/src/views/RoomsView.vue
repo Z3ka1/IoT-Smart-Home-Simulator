@@ -11,6 +11,7 @@ let popupIsActive = ref(false)
 const confirmDeletePopup = ref(false)
 const selectedRoom = ref(null)
 const devicesInRoom = ref([])
+const roomDeviceCounts = ref({})
 
 const errorPopup = ref(false)
 const errorMessage = ref('') 
@@ -18,6 +19,27 @@ const errorMessage = ref('')
 console.log(roomStore.rooms)
 
 const newRoomName = ref('')
+
+const fetchRoomDeviceCounts = async () => {
+  try {
+    const response = await axios.get('http://localhost:8000/api/rooms/device-counts')
+    roomDeviceCounts.value = response.data
+  } catch (error) {
+    console.error('Error fetching room device counts:', error)
+    roomStore.rooms.forEach(room => {
+      roomDeviceCounts.value[room.id] = { device_count: 0 }
+    })
+  }
+}
+
+const getDeviceCount = (roomId) => {
+  return roomDeviceCounts.value[roomId]?.device_count || 0
+}
+
+const getDeviceCountText = (roomId) => {
+  const count = getDeviceCount(roomId)
+  return count === 1 ? '1 device' : `${count} devices`
+}
 
 const addNewRoom = async () => {
     if (!newRoomName.value.trim()) return
@@ -30,6 +52,7 @@ const addNewRoom = async () => {
         roomStore.addRoom( {id: response.data.id, gateway_id: response.data.gateway_id, name: newRoomName.value} )
         newRoomName.value = ''
         popupIsActive.value = false
+        fetchRoomDeviceCounts()
       }
     } catch (error) {
         console.error('Error adding room:', error);
@@ -66,13 +89,23 @@ const confirmDeleteRoom = async () => {
       roomStore.removeRoom(selectedRoom.value.id)
       confirmDeletePopup.value = false
       selectedRoom.value = null
+      fetchRoomDeviceCounts()
     }
   } catch (error) {
     console.error('Error removing room: ', error)
-    alert('Error removing room')
+
+    if (error.response && error.response.data && error.response.data.error) {
+      errorMessage.value = error.response.data.error
+    } else {
+      errorMessage.value = "An unexpected error occured while removing the room."
+    }
+    errorPopup.value = true
   }
 }
 
+onMounted(() => {
+  fetchRoomDeviceCounts()
+})
 
 </script>
 
@@ -118,8 +151,8 @@ const confirmDeleteRoom = async () => {
         </div>
         
         <div class="flex items-center justify-between text-sm">
-          <span class="text-muted-foreground">Status</span>
-          <span class="text-success font-medium">Active</span>
+          <span class="text-muted-foreground">Devices</span>
+          <span class="text-primary font-medium">{{ getDeviceCountText(room.id) }}</span>
         </div>
       </div>
     </div>

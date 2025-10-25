@@ -397,7 +397,7 @@ def update_rgb_strip_brightness(device_id):
         return jsonify({'error': 'Missing "brightness" field in request'}), 400    
     
     properties = device.properties or {}
-    properties['brightness'] = data['brightness'] / 100
+    properties['brightness'] = data['brightness']
 
     device.properties = properties
     db.session.commit()

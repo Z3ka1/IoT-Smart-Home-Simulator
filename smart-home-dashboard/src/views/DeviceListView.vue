@@ -2,10 +2,17 @@
 import { ref, computed } from 'vue'
 import { useDeviceStore } from '@/stores/deviceStore'
 import { useRoomStore } from '@/stores/roomStore'
+import PopupWindow from '@/components/PopupWindow.vue'
 import axios from '../utils/axios'
 
 const deviceStore = useDeviceStore()
 const roomStore = useRoomStore()
+
+const confirmDeletePopup = ref(false)
+const selectedDevice = ref(null)
+
+const errorPopup = ref(false)
+const errorMessage = ref('') 
 
 const getRoomName = (roomId) => {
   const room = roomStore.rooms.find(r => r.id === roomId)
@@ -19,21 +26,30 @@ const formatPropertyValue = (value) => {
   return String(value)
 }
 
-const deleteDevice = async (deviceId, deviceName) => {
-  if (!confirm(`Are you sure you want to delete "${deviceName}"? This action cannot be undone.`)) {
-    return
-  }
+// Trigger delete confirmation popup
+const askDeleteDevice = async (device) => {
+  selectedDevice.value = device
+  confirmDeletePopup.value = true
+}
 
+const deleteDevice = async () => {
   try {
-    const response = await axios.delete(`http://localhost:8000/api/devices/remove/${deviceId}`)
+    const response = await axios.delete(`http://localhost:8000/api/devices/remove/${selectedDevice.value.id}`)
     if (response.status === 200) {
       // Remove device from store
-      deviceStore.devices = deviceStore.devices.filter(d => d.id !== deviceId)
-      alert('Device deleted successfully')
+      deviceStore.devices = deviceStore.devices.filter(d => d.id !== selectedDevice.value.id)
+      confirmDeletePopup.value = false
+      selectedDevice.value = null
     }
   } catch (error) {
     console.error('Error deleting device:', error)
-    alert('Error deleting device')
+    
+    if (error.response && error.response.data && error.response.data.error) {
+      errorMessage.value = error.response.data.error
+    } else {
+      errorMessage.value = "An unexpected error occured while deleting the device."
+    }
+    errorPopup.value = true
   }
 }
 
@@ -85,7 +101,7 @@ const getDeviceIcon = (type) => {
             <div class="w-12 h-12 bg-secondary rounded-xl flex items-center justify-center text-2xl">
               <!-- {{ getDeviceIcon(device.type) }} -->
               <img :src="getDeviceIcon(device.type)" 
-                 :alt="deviceType"
+                 :alt="device.type"
                  class="w-12 h-12 object-contain drop-shadow-lg" />
             </div>
             <div>
@@ -110,7 +126,7 @@ const getDeviceIcon = (type) => {
             </div>
             
             <button
-              @click="deleteDevice(device.id, device.name)"
+              @click="askDeleteDevice(device)"
               class="w-9 h-9 bg-destructive/10 hover:bg-destructive/20 text-destructive rounded-lg flex items-center justify-center transition-colors"
               title="Delete device"
             >
@@ -155,5 +171,48 @@ const getDeviceIcon = (type) => {
         </div>
       </div>
     </div>
+
+    <!-- Confirm Delete Popup -->
+    <PopupWindow @closePopup="confirmDeletePopup = false" v-if="confirmDeletePopup">
+      <div class="space-y-6">
+        <h3 class="text-lg font-semibold text-foreground">
+          Delete Device "{{ selectedDevice?.name }}" ({{ (selectedDevice?.type) }})?
+        </h3>
+        <p class="text-muted-foreground text-sm">
+          This action will permanently delete the device and all properties related to it.
+        </p>
+        <p class="text-sm text-muted-foreground italic">This action cannot be undone.</p>
+ 
+        <div class="flex justify-end space-x-3">
+          <button @click="confirmDeletePopup = false" class="px-4 py-2 text-muted-foreground hover:text-foreground transition-colors">
+            Cancel
+          </button>
+          <button
+            @click="deleteDevice"
+            class="bg-destructive text-destructive-foreground px-6 py-2 rounded-lg font-medium hover:bg-destructive/90 transition-colors"
+          >
+            Delete Device
+          </button>
+        </div>
+      </div>
+    </PopupWindow>
+
+    <!-- Error Popup -->
+    <PopupWindow v-if="errorPopup" @closePopup="errorPopup = false">
+      <div class="space-y-4">
+        <h3 class="text-lg font-semibold text-destructive">Error</h3>
+        <p class="text-muted-foreground">{{ errorMessage }}</p>
+ 
+        <div class="flex justify-end">
+          <button
+            @click="errorPopup = false"
+            class="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors"
+          >
+            OK
+          </button>
+        </div>
+      </div>
+    </PopupWindow>
+
   </div>
 </template>

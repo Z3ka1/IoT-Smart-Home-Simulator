@@ -60,3 +60,29 @@ def get_devices_in_room(room_id):
             for d in devices
         ]
     }), 200
+
+@rooms_bp.route('/rooms/device-counts', methods=['GET'])
+@token_required
+def get_room_device_counts():
+    gateway_id = request.gateway_id
+    
+    # Query to count devices per room
+    room_counts = db.session.query(
+        Room.id, 
+        Room.name,
+        db.func.count(Device.id).label('device_count')
+    ).outerjoin(Device, Room.id == Device.room_id)\
+     .filter(Room.gateway_id == gateway_id)\
+     .group_by(Room.id, Room.name)\
+     .all()
+    
+    # Convert to dictionary format
+    counts_dict = {
+        room.id: {
+            'name': room.name,
+            'device_count': room.device_count
+        }
+        for room in room_counts
+    }
+    
+    return jsonify(counts_dict), 200

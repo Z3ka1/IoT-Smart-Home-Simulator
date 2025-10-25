@@ -17,6 +17,7 @@ const ignoreNextUpdate = ref(false)
 const isAvailable = ref(true)
 const firstLineError = ref('')
 const secondLineError = ref('')
+const isInitializing = ref(true)
 
 const displayDeviceName = truncateText(props.device.name, 17, 'LCD Display')
 const displayDeviceDescription = truncateDescription(props.device.description, 17, '16x2 Display')
@@ -49,6 +50,8 @@ const lcdBorderColor = computed(() => {
 })
 
 onMounted(() => {
+  isInitializing.value = true
+
   isOn.value = props.device.properties?.state === 'on'
   firstLineText.value = props.device.properties?.first_line_text || ''
   secondLineText.value = props.device.properties?.second_line_text || ''
@@ -56,6 +59,10 @@ onMounted(() => {
   firstLineInput.value = firstLineText.value
   secondLineInput.value = secondLineText.value
   isAvailable.value = props.device.available
+
+  setTimeout(() => {
+    isInitializing.value = false
+  }, 500)
 })
 
 watch(() => props.device.properties?.state, (newVal) => {
@@ -140,6 +147,8 @@ const updateText = async () => {
 }
 
 const updateTheme = debounce(async (newTheme) => {
+  if (isInitializing.value) return
+
   ignoreNextUpdate.value = true
   try {
     await axios.put(`http://localhost:8000/api/devices/lcddisplay/${props.device.id}/theme`, {

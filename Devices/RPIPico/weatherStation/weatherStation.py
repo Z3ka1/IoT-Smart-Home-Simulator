@@ -19,7 +19,8 @@ MEASUREMENT_TIME = 60	# In seconds, how often device measures and sends data
 
 device_id = None
 
-sensor = DHT11(16, Pin.OUT, Pin.PULL_DOWN)
+sensorPIN = Pin(16, Pin.OUT, Pin.PULL_DOWN)
+sensor = DHT11(sensorPIN)
 temperature = 0
 humidity = 0
 
@@ -103,7 +104,6 @@ def get_geolocation():
             latitude = response['lat']
             longitude = response['lon']
             city = response['city']
-        response.close()
     except Exception as e:
         print("Error: Can't get geolocation data: ", e)
 
@@ -115,11 +115,10 @@ def get_current_weather_data():
         
         if current_weather['cod'] == 200:
             api_temperature = current_weather['main']['temp']
-            api_weather_description = current_weather['weather']['main']
+            api_weather_description = current_weather['weather'][0]['main']
             api_feels_like = current_weather['main']['feels_like']
             api_pressure = current_weather['main']['pressure']
             api_humidity = current_weather['main']['humidity']
-        current_weather.close()
     except Exception as e:
         print("Error: Can't get current weather data: ", e)
         
@@ -130,7 +129,6 @@ def get_forecast_weather_data():
         forecast_weather = requests.get(f"https://api.openweathermap.org/data/2.5/forecast?lat={latitude}&lon={longitude}&appid={secrets.apiKey}&units=metric").json()
         # TODO
         
-        forecast_weather.close()
     except Exception as e:
         print("Error: Can't get forecast weather data: ", e)
         
@@ -177,4 +175,7 @@ try:
         time.sleep(MEASUREMENT_TIME)
 except KeyboardInterrupt:
     print("Station is turning off...")
+    pingTimer.deinit()
+except Exception as e:
+    print(f"Critical error: {e}")
     pingTimer.deinit()

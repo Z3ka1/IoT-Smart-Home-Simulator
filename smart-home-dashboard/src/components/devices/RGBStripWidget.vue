@@ -14,17 +14,24 @@ const blue = ref(0)
 const brightness = ref(100)
 const ignoreNextUpdate = ref(false)
 const isAvailable = ref(true)
+const isInitializing = ref(true)
 
 const displayDeviceName = truncateText(props.device.name, 17, 'RGB Strip')
 const displayDeviceDescription = truncateDescription(props.device.description, 17, 'Smart RGB Led')
 
 onMounted(() => {
+  isInitializing.value = true
+
   isOn.value = props.device.properties?.state === 'on'
   red.value = props.device.properties?.red || 0
   green.value = props.device.properties?.green || 0
   blue.value = props.device.properties?.blue || 0
   brightness.value = props.device.properties?.brightness || 100
   isAvailable.value = props.device.available
+
+  setTimeout(() => {
+    isInitializing.value = false
+  }, 500)
 })
 
 watch(() => props.device.properties?.state, (newVal) => {
@@ -83,6 +90,8 @@ const updateDeviceState = debounce(async (newValue) => {
 }, 200)
 
 const updateColor = debounce(async () => {
+  if (isInitializing.value) return
+
   ignoreNextUpdate.value = true
   try {
     await axios.put(`http://localhost:8000/api/devices/rgbstrip/${props.device.id}/color`, {
@@ -101,6 +110,8 @@ const updateColor = debounce(async () => {
 }, 300)
 
 const updateBrightness = debounce(async (newValue) => {
+  if (isInitializing.value) return
+
   ignoreNextUpdate.value = true
   try {
     await axios.put(`http://localhost:8000/api/devices/rgbstrip/${props.device.id}/brightness`, {
