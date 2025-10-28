@@ -125,7 +125,7 @@ if device_id == None:
 try:
     while True:
         poll_properties()
-        if current_state and change_detected:
+        if current_state == "on" and change_detected:
             lcd.clear()
             lcd.setRGB(colorR, colorG, colorB)
             lcd.setCursor(0, 0)
@@ -134,7 +134,7 @@ try:
             lcd.printout(second_line_text)
             
             change_detected = False
-        elif not current_state:
+        elif current_state == "off":
             lcd.setRGB(0, 0, 0)
         time.sleep(POLL_TIME)
 except KeyboardInterrupt:

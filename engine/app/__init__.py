@@ -90,12 +90,14 @@ def create_app():
     from app.routes.devices import devices_bp
     from app.routes.gateways import gateways_bp
     from app.routes.auth import auth_bp
+    from app.routes.scenes import scenes_bp
 
     app.register_blueprint(auth_bp, url_prefix='/api')
     app.register_blueprint(rooms_bp, url_prefix='/api')
     app.register_blueprint(devices_bp, url_prefix='/api')
     app.register_blueprint(gateways_bp, url_prefix='/api')
     app.register_blueprint(emits_bp)
+    app.register_blueprint(scenes_bp, url_prefix='/api')
 
     with app.app_context():
         db.create_all()

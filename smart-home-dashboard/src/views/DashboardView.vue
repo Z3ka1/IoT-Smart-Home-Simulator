@@ -7,12 +7,26 @@ import { deviceWidgetMap } from '@/utils/deviceWidgetMap'
 import socket from '@/services/websocket'
 import { useRoomStore } from '@/stores/roomStore'
 
+import { useSceneStore } from '@/stores/sceneStore'
+import PopupWindow from '@/components/PopupWindow.vue'
+import SceneEditor from '@/components/SceneEditor.vue'
+
+const sceneStore = useSceneStore()
+const showSceneList = ref(false)
+const showSceneEditor = ref(false)
+const editingScene = ref(null)
+
 const selectedRoomId = ref(null)
 const deviceStore = useDeviceStore();
 const { fetchDevices } = useDeviceStore();
 const roomStore = useRoomStore()
 
 const noRooms = computed (() => roomStore.rooms.length === 0)
+
+const errorPopup = ref(false)
+const errorMessage = ref('')
+const confirmDeletePopup = ref(false)
+const selectedScene = ref(null)
 
 const socketHandlers = {
   device_status: null,
@@ -152,6 +166,7 @@ const handleAlarmSensorEnabledUpdate = (data) => {
 
 onMounted(() => {
   fetchDevices();
+  sceneStore.fetchScenes();
   
   socketHandlers.device_status = handleSocketUpdate
   socketHandlers.motion_detected = handleMotionDetectedUpdate
@@ -218,6 +233,68 @@ watch(selectedRoomId, () => {
   }
 });
 
+//Scenes
+const scenesInSelectedRoom = computed(() => {
+  if (!selectedRoomId.value) return sceneStore.scenes
+  return sceneStore.scenes.filter(s => !s.roomId || s.roomId === selectedRoomId.value)
+})
+
+const openSceneEditor = (scene = null) => {
+  editingScene.value = scene
+  showSceneEditor.value = true
+  showSceneList.value = false
+}
+
+const handleSaveScene = async (sceneData) => {
+  try {
+    if (editingScene.value) {
+      await sceneStore.updateScene(editingScene.value.id, sceneData)
+    } else {
+      await sceneStore.createScene(sceneData)
+    }
+    showSceneEditor.value = false
+    editingScene.value = null
+  } catch (error) {
+    errorMessage.value = 'Failed to save scene: ' + error.message
+    errorPopup.value = true
+  }
+}
+
+const openDeleteConfirm = (scene) => {
+  selectedScene.value = scene
+  confirmDeletePopup.value = true
+}
+
+const closeDeleteConfirm = () => {
+  confirmDeletePopup.value = false
+  selectedScene.value = null
+}
+
+const handleDeleteScene = async () => {
+  if (!selectedScene.value) return 
+  try {
+    await sceneStore.deleteScene(selectedScene.value.id)
+    closeDeleteConfirm()
+  } catch (error) {
+    errorMessage.value = 'Failed to delete scene: ' + error.message
+    errorPopup.value = true
+    closeDeleteConfirm()
+  }
+  
+}
+
+const handleActivateScene = async (sceneId) => {
+  try {
+    await sceneStore.activateScene(sceneId)
+    showSceneList.value = false
+  } catch (error) {
+    errorMessage.value = 'Failed to activate scene: ' + error.message
+    errorPopup.value = true
+  }
+  finally {
+    deviceStore.fetchDevices()
+  }
+}
 
 </script>
 
@@ -225,6 +302,86 @@ watch(selectedRoomId, () => {
   <div class="max-w-7xl mx-auto">
     <!-- Dynamic Navbar -->
     <DashboardNavbar :selectedRoom="selectedRoomId" @room-selected="handleRoomSelected($event)"/>
+
+    <div v-if="selectedRoomId" class="mb-6 flex items-center gap-3">
+      <button
+        @click="showSceneList = !showSceneList"
+        class="flex items-center gap-2 bg-card border border-border hover:border-primary/50 text-foreground px-4 py-2 rounded-lg transition-colors"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+        </svg>
+        Scenes
+        <span class="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">{{ scenesInSelectedRoom.length }}</span>
+      </button>
+
+      <button
+        @click="openSceneEditor()"
+        class="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors"
+      >
+        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/>
+        </svg>
+        New Scene
+      </button>
+    </div>
+
+    <div v-if="showSceneList && selectedRoomId" class="mb-6 bg-card border border-border rounded-xl p-4 shadow-lg">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-semibold text-foreground">Available Scenes</h3>
+        <button @click="showSceneList = false" class="text-muted-foreground hover:text-foreground">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+          </svg>
+        </button>
+      </div>
+
+      <div v-if="scenesInSelectedRoom.length === 0" class="text-center py-8 text-muted-foreground">
+        <p>No scenes created yet</p>
+        <button @click="openSceneEditor()" class="text-primary hover:underline mt-2">Create your first scene</button>
+      </div>
+
+      <div v-else class="space-y-2">
+        <div
+          v-for="scene in scenesInSelectedRoom"
+          :key="scene.id"
+          class="flex items-center justify-between p-3 bg-background rounded-lg hover:bg-muted/50 transition-colors group"
+        >
+          <div class="flex-1">
+            <h4 class="font-medium text-foreground">{{ scene.name }}</h4>
+            <p v-if="scene.description" class="text-sm text-muted-foreground">{{ scene.description }}</p>
+            <p class="text-xs text-muted-foreground mt-1">
+              {{ Object.keys(scene.deviceConfigurations || {}).length }} device(s)
+            </p>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button
+              @click="handleActivateScene(scene.id)"
+              class="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors text-sm"
+            >
+              Activate
+            </button>
+            <button
+              @click="openSceneEditor(scene)"
+              class="p-2 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
+              </svg>
+            </button>
+            <button
+              @click="openDeleteConfirm(scene)"
+              class="p-2 text-destructive hover:text-destructive/80 transition-colors"
+            >
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   
     <!-- Device Widgets -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-start">
@@ -270,6 +427,57 @@ watch(selectedRoomId, () => {
         Add Room
       </RouterLink>
     </div>
+
+    <PopupWindow v-if="showSceneEditor" @closePopup="showSceneEditor = false; editingScene = null">
+      <SceneEditor
+        :scene="editingScene"
+        :roomId="selectedRoomId"
+        @save="handleSaveScene"
+        @cancel="showSceneEditor = false; editingScene = null"
+      />
+    </PopupWindow>
+
+    <!-- Confirm Delete Popup -->
+    <PopupWindow @closePopup="closeDeleteConfirm" v-if="confirmDeletePopup">
+      <div class="space-y-6">
+        <h3 class="text-lg font-semibold text-foreground">
+          Delete Scene "{{ selectedScene?.name }}"?
+        </h3>
+        <p class="text-muted-foreground text-sm">
+          This action will permanently delete the scene and all related configurations.
+        </p>
+        <p class="text-sm text-muted-foreground italic">This action cannot be undone.</p>
+ 
+        <div class="flex justify-end space-x-3">
+          <button @click="closeDeleteConfirm" class="px-4 py-2 text-muted-foreground hover:text-foreground transition-colors">
+            Cancel
+          </button>
+          <button
+            @click="handleDeleteScene"
+            class="bg-destructive text-destructive-foreground px-6 py-2 rounded-lg font-medium hover:bg-destructive/90 transition-colors"
+          >
+            Delete Scene
+          </button>
+        </div>
+      </div>
+    </PopupWindow>
+
+    <!-- Error Popup -->
+    <PopupWindow v-if="errorPopup" @closePopup="errorPopup = false">
+      <div class="space-y-4">
+        <h3 class="text-lg font-semibold text-destructive">Error</h3>
+        <p class="text-muted-foreground">{{ errorMessage }}</p>
+ 
+        <div class="flex justify-end">
+          <button
+            @click="errorPopup = false"
+            class="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors"
+          >
+            OK
+          </button>
+        </div>
+      </div>
+    </PopupWindow>
  
   </div>
 </template>
