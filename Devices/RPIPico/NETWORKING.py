@@ -77,27 +77,27 @@ def discover_server(port = 50000):
         
         if response.startswith('SMART_HOME_SERVER:'):
             server_port = int(response.split(':')[1])
-            print(f"Server found at {addr[0]}:{server_port}")
+            print(f"[DISCOVERY] Server found at {addr[0]}:{server_port}")
             return addr[0], server_port
     
     except Exception as e:
-        print(f"Discovery failed {e}")
+        print(f"[DISCOVERY] Failed {e}")
     finally:
         send_sock.close()
         recv_sock.close()
         
     return None, None
 
-def discover_with_retry(max_attempts=3):
+def discover_with_retry(port = 50000, max_attempts=3):
     for attempt in range(max_attempts):
-        print(f"Attempt {attempt + 1}/{max_attempts}")
-        server_ip, server_port = discover_server()
+        print(f"[DISCOVERY] Attempt {attempt + 1}/{max_attempts}")
+        server_ip, server_port = discover_server(port)
         
         if server_ip:
             return server_ip, server_port
         
         if attempt < max_attempts - 1:
-            print("Retrying in 3 seconds...")
+            print("[DISCOVERY] Retrying in 3 seconds...")
             time.sleep(3)
     
     return None, None

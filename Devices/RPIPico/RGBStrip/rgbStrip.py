@@ -1,4 +1,4 @@
-from NETWORKING import try_connect, get_new_credentials, connect_wifi, discover_server, save_device_id, load_device_id
+from NETWORKING import try_connect, get_new_credentials, connect_wifi, discover_with_retry, save_device_id, load_device_id
 from ws2812b import WS2812
 import time
 import network
@@ -96,27 +96,30 @@ if SSID != "" and PASSWORD != "":
 else:
     connect_wifi()
     
-server_ip, server_port = discover_server()
+server_ip, server_port = discover_with_retry()
 BACKEND_URL = f'http://{server_ip}:{server_port}'
 print("\n\n")
 
 device_id = load_device_id()
 print(f"device_id = {device_id}")
-if device_id == None:
+if device_id == None and server_port != None:
     input("Press Enter to pair this device")
     pair_device()
-    
-try:
-    while True:
-        poll_properties()
-        if current_state == "on":
-            strip.set_brightness(brightness)
-            strip.fill((red, green, blue))
-        else:
-            strip.clear()
+
+if server_port != None:
+    try:
+        while True:
+            poll_properties()
+            if current_state == "on":
+                strip.set_brightness(brightness)
+                strip.fill((red, green, blue))
+            else:
+                strip.clear()
+            strip.show()
+            time.sleep(POLL_TIME)
+    except KeyboardInterrupt:
+        print("RGB Strip is turning off...")
+        strip.clear()
         strip.show()
-        time.sleep(POLL_TIME)
-except KeyboardInterrupt:
-    print("RGB Strip is turning off...")
-    strip.clear()
-    strip.show()
+else:
+    print("Server can't be discovered. Strip is turning off...")

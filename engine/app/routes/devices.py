@@ -152,6 +152,36 @@ def delete_device(device_id):
     db.session.commit()
     return jsonify({'message': 'Device deleted successfully'}), 200
 
+@devices_bp.route('/devices/update/<int:device_id>', methods=['PUT'])
+@token_required
+def update_device(device_id):
+    gateway_id = request.gateway_id
+    
+    device = Device.query.filter_by(id=device_id, gateway_id=gateway_id).first()
+    if not device:
+        return jsonify({'error': 'Device not found'}), 404
+    
+    data = request.get_json()
+    
+    if 'name' in data:
+        device.name = data['name']
+    if 'description' in data:
+        device.description = data['description']
+    if 'room_id' in data:
+        device.room_id = data['room_id']
+    
+    db.session.commit()
+    
+    return jsonify({
+        'message': 'Device updated successfully',
+        'device': {
+            'id': device.id,
+            'name': device.name,
+            'description': device.description,
+            'roomId': device.room_id
+        }
+    }), 200
+
 #region simpleLED
 @devices_bp.route('/devices/simpleled/<int:device_id>/state', methods=['PUT'])
 @token_required

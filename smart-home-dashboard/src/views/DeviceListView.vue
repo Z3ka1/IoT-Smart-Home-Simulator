@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { useDeviceStore } from '@/stores/deviceStore'
 import { useRoomStore } from '@/stores/roomStore'
 import PopupWindow from '@/components/PopupWindow.vue'
+import DeviceEditor from '@/components/DeviceEditor.vue'
 import axios from '../utils/axios'
 
 const deviceStore = useDeviceStore()
@@ -13,6 +14,8 @@ const selectedDevice = ref(null)
 
 const errorPopup = ref(false)
 const errorMessage = ref('') 
+
+const showEditPopup =  ref(false)
 
 const getRoomName = (roomId) => {
   const room = roomStore.rooms.find(r => r.id === roomId)
@@ -62,6 +65,49 @@ const getDeviceIcon = (type) => {
     'alarmsensor': 'alarmsensor.png'
   }
   return `/device-icons/${icons[type] || 'genericdevice.png'}`
+}
+
+const openEditPopup = (device) => {
+  selectedDevice.value = device
+  showEditPopup.value = true
+}
+
+const closeEditPopup = () => {
+  showEditPopup.value = false
+  selectedDevice.value = null
+}
+
+const saveDeviceChanges = async (updatedData) => {
+  try {
+    const response = await axios.put(
+      `http://localhost:8000/api/devices/update/${updatedData.id}`,
+      {
+        name: updatedData.name,
+        description: updatedData.description,
+        room_id: updatedData.room_id
+      }
+    )
+
+    if (response.status === 200) {
+      // Update device in store
+      const deviceIndex = deviceStore.devices.findIndex(d => d.id === updatedData.id)
+      if (deviceIndex !== -1) {
+        deviceStore.devices[deviceIndex].name = updatedData.name
+        deviceStore.devices[deviceIndex].description = updatedData.description
+        deviceStore.devices[deviceIndex].roomId = updatedData.room_id
+      }
+      closeEditPopup()
+    }
+  } catch (error) {
+    console.error('Error updating device: ', error)
+    
+    if (error.response && error.response.data && error.response.data.error) {
+      errorMessage.value = error.response.data.error
+    } else {
+      errorMessage.value = "An unexpected error occured while updating the device."
+    }
+    errorPopup.value = true
+  }
 }
 </script>
 
@@ -124,6 +170,16 @@ const getDeviceIcon = (type) => {
                 {{ device.available ? 'Online' : 'Offline' }}
               </span>
             </div>
+
+            <button
+              @click="openEditPopup(device)"
+              class="w-9 h-9 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-500 rounded-lg flex items-center justify-center transition-colors"
+              title="Edit device"
+            >
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
+              </svg>
+            </button>
             
             <button
               @click="askDeleteDevice(device)"
@@ -195,6 +251,15 @@ const getDeviceIcon = (type) => {
           </button>
         </div>
       </div>
+    </PopupWindow>
+
+    <!-- Edit Device Popup -->
+    <PopupWindow v-if="showEditPopup" @closePopup="closeEditPopup">
+      <DeviceEditor
+        :device="selectedDevice"
+        @save="saveDeviceChanges"
+        @close="closeEditPopup"
+      />
     </PopupWindow>
 
     <!-- Error Popup -->

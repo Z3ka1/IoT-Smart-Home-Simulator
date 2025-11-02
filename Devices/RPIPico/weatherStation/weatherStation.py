@@ -1,4 +1,4 @@
-from NETWORKING import try_connect, get_new_credentials, connect_wifi, discover_server, save_device_id, load_device_id
+from NETWORKING import try_connect, get_new_credentials, connect_wifi, discover_with_retry, save_device_id, load_device_id
 from machine import Pin
 from machine import Timer
 import network
@@ -146,36 +146,37 @@ if SSID != "" and PASSWORD != "":
 else:
     connect_wifi()
     
-server_ip, server_port = discover_server()
+server_ip, server_port = discover_with_retry()
 BACKEND_URL = f'http://{server_ip}:{server_port}'
 print("\n\n")
 
 device_id = load_device_id()
 print(f"device_id = {device_id}")
-if device_id == None:
+if device_id == None and server_port != None:
     input("Press Enter to pair this device")
     pair_device()
     
-    
-# TIMER za MERENJA NA SVAKI MINUT UMESTO WHILE TRUE ??
 
-pingTimer = Timer(period = 2000, mode = Timer.PERIODIC, callback = ping_server)
+if server_port != None:
+    pingTimer = Timer(period = 2000, mode = Timer.PERIODIC, callback = ping_server)
 
-get_geolocation()
-try:
-    while True:
-        sensor.measure()
-        temperature = sensor.temperature()
-        humidity = sensor.humidity()
-        print("\r", "Temp = ", temperature, chr(176)+'C ',"Humidity = ", humidity, '%', end = '')
-        
-        get_current_weather_data()
-        send_measurements()
+    get_geolocation()
+    try:
+        while True:
+            sensor.measure()
+            temperature = sensor.temperature()
+            humidity = sensor.humidity()
+            print("\r", "Temp = ", temperature, chr(176)+'C ',"Humidity = ", humidity, '%', end = '')
             
-        time.sleep(MEASUREMENT_TIME)
-except KeyboardInterrupt:
-    print("Station is turning off...")
-    pingTimer.deinit()
-except Exception as e:
-    print(f"Critical error: {e}")
-    pingTimer.deinit()
+            get_current_weather_data()
+            send_measurements()
+                
+            time.sleep(MEASUREMENT_TIME)
+    except KeyboardInterrupt:
+        print("Station is turning off...")
+        pingTimer.deinit()
+    except Exception as e:
+        print(f"Critical error: {e}")
+        pingTimer.deinit()
+else:
+    print("Server can't be discovered. Station is turning off...")
